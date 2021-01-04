@@ -26,6 +26,16 @@ namespace GeneratorWindowsApp.Device
 
         public byte[] Serial => throw new NotImplementedException();
 
+        public void BootloaderRunMcuFw()
+        {
+            throw new NotImplementedException();
+        }
+
+        public bool BootloaderUploadMcuFwChunk(byte[] chunk)
+        {
+            throw new NotImplementedException();
+        }
+
         public void Disconnect()
         {
 
