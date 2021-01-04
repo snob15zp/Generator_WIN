@@ -4,7 +4,7 @@ using System.Text;
 
 namespace GeneratorApiLibrary.Model
 {
-    class Program
+    public class Program
     {
         public string id { get; set; }
         public string name { get; set; }

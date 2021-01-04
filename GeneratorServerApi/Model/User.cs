@@ -8,7 +8,7 @@ namespace GeneratorApiLibrary.Model
     {
         public string id { get; set; }
         public string token { get; set; }
-        public string[] privileges { get; set; }
+        public List<string> privileges { get; set; }
         public UserProfile profile { get; set; }
     }
 }

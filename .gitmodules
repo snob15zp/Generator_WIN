@@ -1,0 +1,3 @@
+[submodule "gen-uploader"]
+	path = gen-uploader
+	url = git@github.com:intx82/gen-uploader.git
