@@ -26,6 +26,11 @@ namespace GeneratorWindowsApp.Device
     {
         public ErrorCodes ErrorCode { get; }
 
+        public DeviceUpdateException() : base("Unable to update device")
+        {
+        }
+
+
         public DeviceUpdateException(ErrorCodes errorCode) : base("Unable to update device")
         {
             this.ErrorCode = errorCode;

@@ -18,8 +18,10 @@ namespace GeneratorWindowsApp.Device
 {
     public interface IDeviceManager
     {
+        event EventHandler<DeviceUpdateStatusEventArgs> DeviceUpdateStatusEvent;
+
         Task<DeviceVersionInfo> CheckForUpdates(CancellationToken cancellationToken);
-        Task DownloadFirmware(string version);
+        Task DownloadFirmware(string version, CancellationToken cancellationToken);
     }
 
     public class DeviceVersionInfo
@@ -35,27 +37,57 @@ namespace GeneratorWindowsApp.Device
         }
     }
 
+    public class DeviceUpdateStatusEventArgs
+    {
+        public DeviceUpdateStatus Status { get; }
+        public int Progress { get; }
+
+        public DeviceUpdateStatusEventArgs(DeviceUpdateStatus status, int progress = -1)
+        {
+            Status = status;
+            Progress = progress;
+        }
+
+        public static DeviceUpdateStatusEventArgs Updating(int current = -1, int total = 1) =>
+            new DeviceUpdateStatusEventArgs(DeviceUpdateStatus.Updating, (int)((current * 100.0) / total));
+
+        public static DeviceUpdateStatusEventArgs Downloading() =>
+            new DeviceUpdateStatusEventArgs(DeviceUpdateStatus.Downloading);
+
+        public static DeviceUpdateStatusEventArgs Rebooting() =>
+            new DeviceUpdateStatusEventArgs(DeviceUpdateStatus.Rebooting);
+    }
+
+    public enum DeviceUpdateStatus
+    {
+        Downloading,
+        Updating,
+        Rebooting,
+        Ready
+    }
+
     internal class DeviceManager : IDeviceManager
     {
-        private readonly IDeviceFactory deviceFactory;
+        private static NLog.Logger logger = NLog.LogManager.GetCurrentClassLogger();
+        private static readonly double BOOTLOADER_TIMEOUT = TimeSpan.FromSeconds(180).TotalMilliseconds;
+
+        private readonly IDeviceConnectionFactory deviceConnectionFactory;
         private readonly IGeneratorApi api;
 
-        private static NLog.Logger logger = NLog.LogManager.GetCurrentClassLogger();
+        public event EventHandler<DeviceUpdateStatusEventArgs> DeviceUpdateStatusEvent;
 
-        public DeviceManager(IDeviceFactory deviceFactory, IGeneratorApi api)
+        public DeviceManager(IDeviceConnectionFactory deviceFactory, IGeneratorApi api)
         {
-            this.deviceFactory = deviceFactory;
+            this.deviceConnectionFactory = deviceFactory;
             this.api = api;
         }
 
         public async Task<DeviceVersionInfo> CheckForUpdates(CancellationToken cancellationToken)
         {
-            IGenerator device = null;
-            try
+            using (var device = deviceConnectionFactory.connect())
             {
-                device = await connectIfDeviceReady();
                 var latestVersion = await GetLatestVersion();
-                var currentVersion = device.Version;
+                var currentVersion = await Task.Run(() => device.Version);
 
                 return new DeviceVersionInfo()
                 {
@@ -63,13 +95,9 @@ namespace GeneratorWindowsApp.Device
                     latestVersion = new Version(latestVersion)
                 };
             }
-            finally
-            {
-                device?.Disconnect();
-            }
         }
 
-        public async Task<string> GetLatestVersion()
+        private async Task<string> GetLatestVersion()
         {
             try
             {
@@ -83,8 +111,9 @@ namespace GeneratorWindowsApp.Device
             }
         }
 
-        public async Task DownloadFirmware(string version)
+        public async Task DownloadFirmware(string version, CancellationToken cancellationToken)
         {
+            DeviceUpdateStatusEvent?.Invoke(this, DeviceUpdateStatusEventArgs.Downloading());
             var tempFileName = Path.GetTempFileName();
             try
             {
@@ -98,8 +127,8 @@ namespace GeneratorWindowsApp.Device
 
             try
             {
-                var tempPath = Path.GetTempPath() + version;
-                ZipFile.ExtractToDirectory(tempFileName, tempPath);
+                var tempPath = Path.GetTempPath() + Path.GetRandomFileName();
+                await Task.Run(() => ZipFile.ExtractToDirectory(tempFileName, tempPath));
                 await UpdateFirmware(tempPath);
             }
             catch (Exception e)
@@ -111,36 +140,86 @@ namespace GeneratorWindowsApp.Device
 
         public async Task UpdateFirmware(string path)
         {
-            await Task.Run(async () =>
+            await Task.Run(() =>
              {
-                 IGenerator device = null;
-                 try
+                 DeviceUpdateStatusEvent?.Invoke(this, DeviceUpdateStatusEventArgs.Updating());
+
+                 var files = Directory.GetFiles(path);
+                 var cpuFile = files.FirstOrDefault(fname => fname.EndsWith(".bf"));
+                 if (cpuFile != null)
                  {
-                     device = await connectIfDeviceReady();
-                     foreach (string file in Directory.GetFiles(path).Where(fname => fname.EndsWith("bf")))
+                     ImportCpuFile(cpuFile);
+                     awaitDeviceConnection();
+                 }
+
+                 using (var device = deviceConnectionFactory.connect())
+                 {
+                     var otherFwFiles = files.Where(fname => !fname.EndsWith(".bf")).ToArray();
+                     int total = otherFwFiles.Length;
+                     if (total > 0)
                      {
-                         XmlDocument doc = new XmlDocument();
-                         doc.Load(file);
-
-                         List<byte> Content = new List<byte>();
-
-                         foreach (XmlNode chunk in doc.DocumentElement.SelectSingleNode("chunks"))
-                         {
-                             Content.AddRange(Convert.FromBase64String(chunk.InnerText));
-                         }
-
-                         var result = device.PutFile(Path.GetFileName(file), Content);
+                         DeviceUpdateStatusEvent?.Invoke(this, DeviceUpdateStatusEventArgs.Updating());
+                     }
+                     int current = 0;
+                     foreach (string file in otherFwFiles)
+                     {
+                         var result = device.PutFile(Path.GetFileName(file), File.ReadAllBytes(file));
                          if (result != ErrorCodes.NoError)
                          {
                              throw new DeviceUpdateException(result);
                          }
+                         DeviceUpdateStatusEvent?.Invoke(this, DeviceUpdateStatusEventArgs.Updating(current++, total));
                      }
+
+                     DeviceUpdateStatusEvent?.Invoke(this, DeviceUpdateStatusEventArgs.Rebooting());
+                     device.BootloaderReset();
                  }
-                 finally
-                 {
-                     device?.Disconnect();
-                 }
+                 awaitDeviceConnection();
              });
+        }
+
+        private void ImportCpuFile(string file)
+        {
+            using (var device = deviceConnectionFactory.connect())
+            {
+                XmlDocument doc = new XmlDocument();
+                doc.Load(file);
+                XmlNode chunks = doc.DocumentElement.SelectSingleNode("chunks");
+                int total = chunks.ChildNodes.Count;
+                int current = 0;
+                foreach (XmlNode chunk in chunks)
+                {
+                    if (!device.BootloaderUploadMcuFwChunk(Convert.FromBase64String(chunk.InnerText)))
+                    {
+                        throw new DeviceUpdateException();
+                    }
+                    DeviceUpdateStatusEvent?.Invoke(this, DeviceUpdateStatusEventArgs.Updating(current++, total));
+                }
+
+                DeviceUpdateStatusEvent?.Invoke(this, DeviceUpdateStatusEventArgs.Rebooting());
+                device.BootloaderRunMcuFw();
+            }
+        }
+
+        private void awaitDeviceConnection()
+        {
+            IDeviceConnection device = null;
+            for (int i = 0; i < BOOTLOADER_TIMEOUT / 10; i++)
+            {
+                Task.Delay((int)(BOOTLOADER_TIMEOUT / 10));
+                try
+                {
+                    // Try to connect to device
+                    device = deviceConnectionFactory.connect();
+                    break;
+                }
+                catch (Exception) { }
+                finally { device?.Disconnect(); }
+            }
+            if (device == null)
+            {
+                throw new DeviceNotConnectedException();
+            }
         }
 
         private string handleApiException(Exception e)
@@ -153,25 +232,6 @@ namespace GeneratorWindowsApp.Device
             {
                 return "Somethig wrong happened";
             }
-        }
-
-        private Task<IGenerator> connectIfDeviceReady()
-        {
-            return Task.Run(() =>
-            {
-                FTDI ftdi_dev = new FTDI();
-                ftdi_dev.OpenByIndex(0);
-                FTDI.FT_STATUS status = ftdi_dev.GetCOMPort(out string port);
-                ftdi_dev.Close();
-                if (status == FTDI.FT_STATUS.FT_OK)
-                {
-                    return deviceFactory.create(port);
-                }
-                else
-                {
-                    throw new DeviceNotConnectedException();
-                }
-            });
         }
     }
 }

@@ -17,7 +17,7 @@ namespace GeneratorWindowsApp
 
         public static void RegisterComponents()
         {
-            container.RegisterType<IDeviceFactory, DeviceFactory>(TypeLifetime.Singleton);
+            container.RegisterType<IDeviceConnectionFactory, DeviceConnectionFactory>(TypeLifetime.Singleton);
             container.RegisterType<IDeviceManager, DeviceManager>(TypeLifetime.Singleton);
             container.RegisterFactory<IGeneratorApi>(f => new GeneratorApi(Properties.Settings.Default.baseApiUrl));
             container.RegisterType<IMessageHandler, MessageHandler>(TypeLifetime.Singleton);

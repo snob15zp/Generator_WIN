@@ -3,7 +3,6 @@ using System;
 using System.Diagnostics;
 using System.Drawing;
 using System.Threading;
-using System.Threading.Tasks;
 using System.Windows.Forms;
 
 namespace GeneratorWindowsApp.Forms
@@ -19,6 +18,51 @@ namespace GeneratorWindowsApp.Forms
         {
             InitializeComponent();
             CheckForUpdates();
+
+            deviceManager.DeviceUpdateStatusEvent += DeviceManager_DeviceUpdateStatusEvent;
+        }
+
+        private void DeviceManager_DeviceUpdateStatusEvent(object sender, DeviceUpdateStatusEventArgs args)
+        {
+            string message = null;
+            switch (args.Status)
+            {
+                case DeviceUpdateStatus.Downloading:
+                    message = "Downloading...";
+                    break;
+                case DeviceUpdateStatus.Updating:
+                    if (args.Progress >= 0)
+                    {
+                        message = message = $"Device update in progress ({args.Progress}%)";
+                    }
+                    else
+                    {
+                        message = "Device update in progress...";
+                    }
+                    break;
+                case DeviceUpdateStatus.Rebooting:
+                    message = "Wait for device rebooting...";
+                    break;
+                case DeviceUpdateStatus.Ready:
+                    break;
+            }
+
+            if (InvokeRequired)
+            {
+                Invoke(
+                    new Action<string, int>((text, progress) => UpdateUploadStatus(text, progress)),
+                    new object[] { message, args.Progress });
+            }
+            else
+            {
+                UpdateUploadStatus(message, args.Progress);
+            }
+        }
+
+        private void UpdateUploadStatus(string text, int progress)
+        {
+            actionLabel.Text = text;
+            actionLabel.Refresh();
         }
 
         private async void CheckForUpdates()
@@ -61,16 +105,15 @@ namespace GeneratorWindowsApp.Forms
             switchToInProgressState("Updating...");
             try
             {
-                await deviceManager.DownloadFirmware(latestVersion);
-            } 
-            catch(DeviceException e)
+                await deviceManager.DownloadFirmware(latestVersion, cancellationTokenSource.Token);
+                switchToSuccessState("Device updated successfully.");
+                infoLabel.Visible = true;
+                infoLabel.Text = $"Current version is {latestVersion}";
+            }
+            catch (DeviceException e)
             {
                 switchToErrorState(e.Message);
             }
-
-            switchToSuccessState("Device updated successfully.");
-            infoLabel.Visible = true;
-            infoLabel.Text = "Current version is 1.2.3.";
         }
 
         private void switchToInProgressState(string actionText)

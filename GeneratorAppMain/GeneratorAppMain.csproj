@@ -226,9 +226,10 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Device\DeviceException.cs" />
-    <Compile Include="Device\DeviceFactory.cs" />
+    <Compile Include="Device\DeviceConnectionFactory.cs" />
     <Compile Include="Device\DeviceManager.cs" />
     <Compile Include="Device\DeviceStatus.cs" />
+    <Compile Include="Device\DeviceConnection.cs" />
     <Compile Include="Forms\DownloadForm.cs">
       <SubType>Form</SubType>
     </Compile>
