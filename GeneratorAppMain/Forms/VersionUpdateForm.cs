@@ -90,13 +90,12 @@ namespace GeneratorWindowsApp.Forms
             }
             catch (OperationCanceledException e) when (e.CancellationToken == cancellationTokenSource.Token)
             {
-                Debug.WriteLine("Task was canceled");
+                switchToErrorState("Operation was canceled.");
             }
         }
 
         private void cancelButton_Click(object sender, EventArgs e)
-        {
-            cancellationTokenSource.Cancel(false);
+        { 
             Dispose();
         }
 
@@ -113,6 +112,10 @@ namespace GeneratorWindowsApp.Forms
             catch (DeviceException e)
             {
                 switchToErrorState(e.Message);
+            }
+            catch (OperationCanceledException e) when (e.CancellationToken == cancellationTokenSource.Token)
+            {
+                switchToErrorState("Operation was canceled.");
             }
         }
 
@@ -150,6 +153,12 @@ namespace GeneratorWindowsApp.Forms
 
             infoLabel.Visible = message != null;
             infoLabel.Text = message;
+        }
+
+        private void VersionUpdateForm_FormClosed(object sender, FormClosedEventArgs e)
+        {
+            cancellationTokenSource.Cancel(true);
+            deviceManager.DeviceUpdateStatusEvent -= DeviceManager_DeviceUpdateStatusEvent;
         }
     }
 }

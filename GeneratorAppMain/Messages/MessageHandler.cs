@@ -19,16 +19,6 @@ namespace GeneratorWindowsApp.Messages
 
         public event EventHandler<string> MessageReceived;
 
-        private readonly IDeviceManager deviceManager;
-        private readonly IGeneratorApi api;
-
-        public MessageHandler(IDeviceManager deviceManager, IGeneratorApi api)
-        {
-            this.deviceManager = deviceManager;
-            this.api = api;
-        }
-
-
         public void handle(string message)
         {
             MessageReceived?.Invoke(this, message);

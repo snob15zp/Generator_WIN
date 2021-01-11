@@ -166,6 +166,7 @@
             this.ShowIcon = false;
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
             this.Text = "Check For Updates";
+            this.FormClosed += new System.Windows.Forms.FormClosedEventHandler(this.VersionUpdateForm_FormClosed);
             this.controlPanel.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)(this.resultPictureBox)).EndInit();
             this.tableLayoutPanel.ResumeLayout(false);

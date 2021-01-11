@@ -81,7 +81,7 @@ namespace GeneratorWindowsApp.Device
         public ErrorCodes PutFile(string FileName, IEnumerable<byte> content)
         {
             Thread.Sleep(1000);
-            return ErrorCodes.FatalError;
+            return ErrorCodes.NoError;
         }
 
         public void Dispose()

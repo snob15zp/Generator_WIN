@@ -36,7 +36,6 @@
             this.actionLabel = new System.Windows.Forms.Label();
             this.controlPanel = new System.Windows.Forms.FlowLayoutPanel();
             this.cancelButton = new System.Windows.Forms.Button();
-            this.downloadButton = new System.Windows.Forms.Button();
             this.tableLayoutPanel.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.resultPictureBox)).BeginInit();
             this.tableLayoutPanel1.SuspendLayout();
@@ -98,6 +97,7 @@
             this.progressBar.MarqueeAnimationSpeed = 10;
             this.progressBar.Name = "progressBar";
             this.progressBar.Size = new System.Drawing.Size(489, 27);
+            this.progressBar.Style = System.Windows.Forms.ProgressBarStyle.Marquee;
             this.progressBar.TabIndex = 1;
             // 
             // infoLabel
@@ -121,7 +121,6 @@
             // controlPanel
             // 
             this.controlPanel.Controls.Add(this.cancelButton);
-            this.controlPanel.Controls.Add(this.downloadButton);
             this.controlPanel.Dock = System.Windows.Forms.DockStyle.Bottom;
             this.controlPanel.FlowDirection = System.Windows.Forms.FlowDirection.RightToLeft;
             this.controlPanel.Location = new System.Drawing.Point(0, 116);
@@ -138,15 +137,7 @@
             this.cancelButton.TabIndex = 0;
             this.cancelButton.Text = "Cancel";
             this.cancelButton.UseVisualStyleBackColor = true;
-            // 
-            // downloadButton
-            // 
-            this.downloadButton.Location = new System.Drawing.Point(390, 11);
-            this.downloadButton.Name = "downloadButton";
-            this.downloadButton.Size = new System.Drawing.Size(91, 32);
-            this.downloadButton.TabIndex = 1;
-            this.downloadButton.Text = "Download";
-            this.downloadButton.UseVisualStyleBackColor = true;
+            this.cancelButton.Click += new System.EventHandler(this.cancelButton_Click);
             // 
             // DownloadForm
             // 
@@ -160,7 +151,8 @@
             this.Name = "DownloadForm";
             this.ShowIcon = false;
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
-            this.Text = "UploadForm";
+            this.Text = "Import programs";
+            this.FormClosed += new System.Windows.Forms.FormClosedEventHandler(this.DownloadForm_FormClosed);
             this.tableLayoutPanel.ResumeLayout(false);
             this.tableLayoutPanel.PerformLayout();
             ((System.ComponentModel.ISupportInitialize)(this.resultPictureBox)).EndInit();
@@ -181,6 +173,5 @@
         private System.Windows.Forms.Label actionLabel;
         private System.Windows.Forms.FlowLayoutPanel controlPanel;
         private System.Windows.Forms.Button cancelButton;
-        private System.Windows.Forms.Button downloadButton;
     }
 }

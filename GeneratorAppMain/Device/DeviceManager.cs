@@ -22,6 +22,7 @@ namespace GeneratorWindowsApp.Device
 
         Task<DeviceVersionInfo> CheckForUpdates(CancellationToken cancellationToken);
         Task DownloadFirmware(string version, CancellationToken cancellationToken);
+        Task DonwloadPrograms(string url, CancellationToken cancellationToken);
     }
 
     public class DeviceVersionInfo
@@ -117,28 +118,49 @@ namespace GeneratorWindowsApp.Device
             var tempFileName = Path.GetTempFileName();
             try
             {
-                await api.DonwloadFirmware(version, tempFileName);
+                await api.DonwloadFirmware(version, tempFileName, cancellationToken);
+
+                var tempPath = Path.GetTempPath() + Path.GetRandomFileName();
+                await Task.Run(() => ZipFile.ExtractToDirectory(tempFileName, tempPath), cancellationToken);
+                await UpdateFirmware(tempPath, cancellationToken);
             }
-            catch (Exception e)
+            catch (ApiException e)
             {
                 logger.Error(e, "Unable to download firmware");
                 throw new DeviceException(handleApiException(e));
             }
-
-            try
+            catch (SystemException e)
             {
-                var tempPath = Path.GetTempPath() + Path.GetRandomFileName();
-                await Task.Run(() => ZipFile.ExtractToDirectory(tempFileName, tempPath));
-                await UpdateFirmware(tempPath);
-            }
-            catch (Exception e)
-            {
-                logger.Error(e, "Unable to update firmware");
-                throw new DeviceException("Something wrong happened");
+                logger.Error(e, "Unable to update device");
+                throw new DeviceException("Unable to extract data");
             }
         }
 
-        public async Task UpdateFirmware(string path)
+        public async Task DonwloadPrograms(string url, CancellationToken cancellationToken)
+        {
+            DeviceUpdateStatusEvent?.Invoke(this, DeviceUpdateStatusEventArgs.Downloading());
+            var tempFileName = Path.GetTempFileName();
+            try
+            {
+                await api.DonwloadPrograms(url, tempFileName, cancellationToken);
+
+                var tempPath = Path.GetTempPath() + Path.GetRandomFileName();
+                await Task.Run(() => ZipFile.ExtractToDirectory(tempFileName, tempPath), cancellationToken);
+                await Task.Run(() => ImportFiles(Directory.GetFiles(tempPath), cancellationToken, false), cancellationToken);
+            }
+            catch (ApiException e)
+            {
+                logger.Error(e, "Unable to download programs");
+                throw new DeviceException(handleApiException(e));
+            }
+            catch (SystemException e)
+            {
+                logger.Error(e, "Unable to update device");
+                throw new DeviceException("Unable to extract data");
+            }
+        }
+
+        private async Task UpdateFirmware(string path, CancellationToken cancellationToken)
         {
             await Task.Run(() =>
              {
@@ -148,37 +170,50 @@ namespace GeneratorWindowsApp.Device
                  var cpuFile = files.FirstOrDefault(fname => fname.EndsWith(".bf"));
                  if (cpuFile != null)
                  {
-                     ImportCpuFile(cpuFile);
-                     awaitDeviceConnection();
+                     ImportCpuFile(cpuFile, cancellationToken);
+                     awaitDeviceConnection(cancellationToken);
                  }
 
-                 using (var device = deviceConnectionFactory.connect())
+                 var otherFwFiles = files.Where(fname => !fname.EndsWith(".bf")).ToArray();
+                 if (otherFwFiles.Length > 0)
                  {
-                     var otherFwFiles = files.Where(fname => !fname.EndsWith(".bf")).ToArray();
-                     int total = otherFwFiles.Length;
-                     if (total > 0)
-                     {
-                         DeviceUpdateStatusEvent?.Invoke(this, DeviceUpdateStatusEventArgs.Updating());
-                     }
-                     int current = 0;
-                     foreach (string file in otherFwFiles)
-                     {
-                         var result = device.PutFile(Path.GetFileName(file), File.ReadAllBytes(file));
-                         if (result != ErrorCodes.NoError)
-                         {
-                             throw new DeviceUpdateException(result);
-                         }
-                         DeviceUpdateStatusEvent?.Invoke(this, DeviceUpdateStatusEventArgs.Updating(current++, total));
-                     }
-
-                     DeviceUpdateStatusEvent?.Invoke(this, DeviceUpdateStatusEventArgs.Rebooting());
-                     device.BootloaderReset();
+                     ImportFiles(otherFwFiles, cancellationToken, true);
+                     awaitDeviceConnection(cancellationToken);
                  }
-                 awaitDeviceConnection();
-             });
+             }, cancellationToken);
         }
 
-        private void ImportCpuFile(string file)
+        private void ImportFiles(string[] files, CancellationToken cancellationToken, bool isRebootNeeded)
+        {
+            using (var device = deviceConnectionFactory.connect())
+            {
+                int total = files.Length;
+                if (total > 0)
+                {
+                    DeviceUpdateStatusEvent?.Invoke(this, DeviceUpdateStatusEventArgs.Updating());
+                }
+                int current = 0;
+                foreach (string file in files)
+                {
+                    cancellationToken.ThrowIfCancellationRequested();
+                    var result = device.PutFile(Path.GetFileName(file), File.ReadAllBytes(file));
+                    if (result != ErrorCodes.NoError)
+                    {
+                        throw new DeviceUpdateException(result);
+                    }
+                    DeviceUpdateStatusEvent?.Invoke(this, DeviceUpdateStatusEventArgs.Updating(current++, total));
+                }
+
+                if (isRebootNeeded)
+                {
+                    cancellationToken.ThrowIfCancellationRequested();
+                    DeviceUpdateStatusEvent?.Invoke(this, DeviceUpdateStatusEventArgs.Rebooting());
+                    device.BootloaderReset();
+                }
+            }
+        }
+
+        private void ImportCpuFile(string file, CancellationToken cancellationToken)
         {
             using (var device = deviceConnectionFactory.connect())
             {
@@ -189,6 +224,7 @@ namespace GeneratorWindowsApp.Device
                 int current = 0;
                 foreach (XmlNode chunk in chunks)
                 {
+                    cancellationToken.ThrowIfCancellationRequested();
                     if (!device.BootloaderUploadMcuFwChunk(Convert.FromBase64String(chunk.InnerText)))
                     {
                         throw new DeviceUpdateException();
@@ -201,12 +237,12 @@ namespace GeneratorWindowsApp.Device
             }
         }
 
-        private void awaitDeviceConnection()
+        private void awaitDeviceConnection(CancellationToken cancellationToken)
         {
             IDeviceConnection device = null;
             for (int i = 0; i < BOOTLOADER_TIMEOUT / 10; i++)
             {
-                Task.Delay((int)(BOOTLOADER_TIMEOUT / 10));
+                Task.Delay((int)(BOOTLOADER_TIMEOUT / 10), cancellationToken);
                 try
                 {
                     // Try to connect to device
