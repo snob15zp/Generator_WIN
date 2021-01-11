@@ -13,8 +13,8 @@ namespace GeneratorWindowsApp.Device
     {
         public IDeviceConnection connect()
         {
-            //return new DeviceConnection();
-            return new FakeDeviceConnection();
+            return new DeviceConnection();
+            //return new FakeDeviceConnection();
         }
     }
 }

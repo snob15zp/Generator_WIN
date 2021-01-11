@@ -55,7 +55,7 @@ namespace GeneratorWindowsApp
         [STAThread]
         static void Main(string[] args)
         {
-            RegisterCustomUriIfNeeded();
+            //RegisterCustomUriIfNeeded();
             UnityConfiguration.RegisterComponents();
 
             var server = UnityConfiguration.Resolve<IMessageServer>();
