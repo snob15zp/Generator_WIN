@@ -29,11 +29,11 @@ namespace GeneratorWindowsApp
 
         private static void RegisterCustomUriIfNeeded()
         {
-            bool isAdmin = true;
+            bool isAdmin;
             using (WindowsIdentity identity = WindowsIdentity.GetCurrent())
             {
                 WindowsPrincipal principal = new WindowsPrincipal(identity);
-                //isAdmin = principal.IsInRole(WindowsBuiltInRole.Administrator);
+                isAdmin = principal.IsInRole(WindowsBuiltInRole.Administrator);
             }
             if(isAdmin)
             {
@@ -45,7 +45,7 @@ namespace GeneratorWindowsApp
                 key = key.CreateSubKey("shell");
                 key = key.CreateSubKey("open");
                 key = key.CreateSubKey("command");
-                key.SetValue("", "C:\\oggsplit.exe");
+                key.SetValue("", "D:\\workspace\\personal\\GeneratorWindows\\GeneratorAppManager\\bin\\Debug\\netcoreapp3.1\\GeneratorAppManager.exe %1");
             }
         }
 
@@ -55,7 +55,7 @@ namespace GeneratorWindowsApp
         [STAThread]
         static void Main(string[] args)
         {
-            //RegisterCustomUriIfNeeded();
+            RegisterCustomUriIfNeeded();
             UnityConfiguration.RegisterComponents();
 
             var server = UnityConfiguration.Resolve<IMessageServer>();

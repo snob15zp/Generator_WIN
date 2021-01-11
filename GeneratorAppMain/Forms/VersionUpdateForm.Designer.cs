@@ -38,6 +38,7 @@
             this.resultPictureBox = new System.Windows.Forms.PictureBox();
             this.tableLayoutPanel = new System.Windows.Forms.TableLayoutPanel();
             this.tableLayoutPanel1 = new System.Windows.Forms.TableLayoutPanel();
+            this.okButton = new System.Windows.Forms.Button();
             this.controlPanel.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.resultPictureBox)).BeginInit();
             this.tableLayoutPanel.SuspendLayout();
@@ -46,19 +47,20 @@
             // 
             // controlPanel
             // 
+            this.controlPanel.Controls.Add(this.okButton);
             this.controlPanel.Controls.Add(this.cancelButton);
             this.controlPanel.Controls.Add(this.updateButton);
             this.controlPanel.Dock = System.Windows.Forms.DockStyle.Bottom;
             this.controlPanel.FlowDirection = System.Windows.Forms.FlowDirection.RightToLeft;
-            this.controlPanel.Location = new System.Drawing.Point(0, 113);
+            this.controlPanel.Location = new System.Drawing.Point(0, 115);
             this.controlPanel.Name = "controlPanel";
             this.controlPanel.Padding = new System.Windows.Forms.Padding(0, 8, 16, 8);
-            this.controlPanel.Size = new System.Drawing.Size(480, 55);
+            this.controlPanel.Size = new System.Drawing.Size(481, 56);
             this.controlPanel.TabIndex = 0;
             // 
             // cancelButton
             // 
-            this.cancelButton.Location = new System.Drawing.Point(386, 11);
+            this.cancelButton.Location = new System.Drawing.Point(306, 11);
             this.cancelButton.Name = "cancelButton";
             this.cancelButton.Size = new System.Drawing.Size(75, 32);
             this.cancelButton.TabIndex = 0;
@@ -68,7 +70,7 @@
             // 
             // updateButton
             // 
-            this.updateButton.Location = new System.Drawing.Point(305, 11);
+            this.updateButton.Location = new System.Drawing.Point(225, 11);
             this.updateButton.Name = "updateButton";
             this.updateButton.Size = new System.Drawing.Size(75, 32);
             this.updateButton.TabIndex = 1;
@@ -82,7 +84,7 @@
             this.progressBar.Location = new System.Drawing.Point(3, 37);
             this.progressBar.MarqueeAnimationSpeed = 10;
             this.progressBar.Name = "progressBar";
-            this.progressBar.Size = new System.Drawing.Size(388, 27);
+            this.progressBar.Size = new System.Drawing.Size(389, 27);
             this.progressBar.Step = 1;
             this.progressBar.Style = System.Windows.Forms.ProgressBarStyle.Marquee;
             this.progressBar.TabIndex = 1;
@@ -113,7 +115,7 @@
             this.resultPictureBox.Location = new System.Drawing.Point(16, 16);
             this.resultPictureBox.Margin = new System.Windows.Forms.Padding(0);
             this.resultPictureBox.Name = "resultPictureBox";
-            this.resultPictureBox.Size = new System.Drawing.Size(48, 97);
+            this.resultPictureBox.Size = new System.Drawing.Size(48, 99);
             this.resultPictureBox.TabIndex = 4;
             this.resultPictureBox.TabStop = false;
             // 
@@ -131,7 +133,7 @@
             this.tableLayoutPanel.Padding = new System.Windows.Forms.Padding(16, 16, 16, 0);
             this.tableLayoutPanel.RowCount = 1;
             this.tableLayoutPanel.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 100F));
-            this.tableLayoutPanel.Size = new System.Drawing.Size(480, 113);
+            this.tableLayoutPanel.Size = new System.Drawing.Size(481, 115);
             this.tableLayoutPanel.TabIndex = 5;
             // 
             // tableLayoutPanel1
@@ -150,14 +152,24 @@
             this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle());
             this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle());
             this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle());
-            this.tableLayoutPanel1.Size = new System.Drawing.Size(394, 91);
+            this.tableLayoutPanel1.Size = new System.Drawing.Size(395, 93);
             this.tableLayoutPanel1.TabIndex = 5;
+            // 
+            // okButton
+            // 
+            this.okButton.Location = new System.Drawing.Point(387, 11);
+            this.okButton.Name = "okButton";
+            this.okButton.Size = new System.Drawing.Size(75, 32);
+            this.okButton.TabIndex = 2;
+            this.okButton.Text = "OK";
+            this.okButton.UseVisualStyleBackColor = true;
+            this.okButton.Click += new System.EventHandler(this.okButton_Click);
             // 
             // VersionUpdateForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 16F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(480, 168);
+            this.ClientSize = new System.Drawing.Size(481, 171);
             this.Controls.Add(this.tableLayoutPanel);
             this.Controls.Add(this.controlPanel);
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedDialog;
@@ -188,5 +200,6 @@
         private System.Windows.Forms.PictureBox resultPictureBox;
         private System.Windows.Forms.TableLayoutPanel tableLayoutPanel;
         private System.Windows.Forms.TableLayoutPanel tableLayoutPanel1;
+        private System.Windows.Forms.Button okButton;
     }
 }

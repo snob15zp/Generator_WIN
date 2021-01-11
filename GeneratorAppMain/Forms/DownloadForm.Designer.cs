@@ -36,6 +36,7 @@
             this.actionLabel = new System.Windows.Forms.Label();
             this.controlPanel = new System.Windows.Forms.FlowLayoutPanel();
             this.cancelButton = new System.Windows.Forms.Button();
+            this.okButton = new System.Windows.Forms.Button();
             this.tableLayoutPanel.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.resultPictureBox)).BeginInit();
             this.tableLayoutPanel1.SuspendLayout();
@@ -120,6 +121,7 @@
             // 
             // controlPanel
             // 
+            this.controlPanel.Controls.Add(this.okButton);
             this.controlPanel.Controls.Add(this.cancelButton);
             this.controlPanel.Dock = System.Windows.Forms.DockStyle.Bottom;
             this.controlPanel.FlowDirection = System.Windows.Forms.FlowDirection.RightToLeft;
@@ -131,13 +133,23 @@
             // 
             // cancelButton
             // 
-            this.cancelButton.Location = new System.Drawing.Point(487, 11);
+            this.cancelButton.Location = new System.Drawing.Point(406, 11);
             this.cancelButton.Name = "cancelButton";
             this.cancelButton.Size = new System.Drawing.Size(75, 32);
             this.cancelButton.TabIndex = 0;
             this.cancelButton.Text = "Cancel";
             this.cancelButton.UseVisualStyleBackColor = true;
             this.cancelButton.Click += new System.EventHandler(this.cancelButton_Click);
+            // 
+            // okButton
+            // 
+            this.okButton.Location = new System.Drawing.Point(487, 11);
+            this.okButton.Name = "okButton";
+            this.okButton.Size = new System.Drawing.Size(75, 32);
+            this.okButton.TabIndex = 0;
+            this.okButton.Text = "OK";
+            this.okButton.UseVisualStyleBackColor = true;
+            this.okButton.Click += new System.EventHandler(this.okButton_Click);
             // 
             // DownloadForm
             // 
@@ -173,5 +185,6 @@
         private System.Windows.Forms.Label actionLabel;
         private System.Windows.Forms.FlowLayoutPanel controlPanel;
         private System.Windows.Forms.Button cancelButton;
+        private System.Windows.Forms.Button okButton;
     }
 }

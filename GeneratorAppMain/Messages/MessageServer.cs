@@ -88,13 +88,12 @@ namespace GeneratorWindowsApp.Messages
             byte[] messageBuffer = new byte[256];
             do
             {
-                pipeStream.Read(messageBuffer, 0, messageBuffer.Length);
-                messageChunk = Encoding.UTF8.GetString(messageBuffer);
+                var size = pipeStream.Read(messageBuffer, 0, messageBuffer.Length);
+                messageChunk = Encoding.UTF8.GetString(messageBuffer, 0, size);
                 messageBuilder.Append(messageChunk);
-                messageBuffer = new byte[messageBuffer.Length];
             }
             while (!pipeStream.IsMessageComplete);
-            return messageBuilder.ToString();
+            return messageBuilder.ToString().TrimEnd();
         }
     }
 }

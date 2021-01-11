@@ -7,7 +7,7 @@
     <ProjectGuid>{729BD821-C43D-4A34-B6E4-1C661A46C190}</ProjectGuid>
     <OutputType>WinExe</OutputType>
     <RootNamespace>GeneratorWindowsApp</RootNamespace>
-    <AssemblyName>GeneratorWindowsApp</AssemblyName>
+    <AssemblyName>generator</AssemblyName>
     <TargetFrameworkVersion>v4.8</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
@@ -48,7 +48,8 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <PropertyGroup>
-    <StartupObject>GeneratorWindowsApp.Program</StartupObject>
+    <StartupObject>
+    </StartupObject>
   </PropertyGroup>
   <PropertyGroup>
     <TargetZone>LocalIntranet</TargetZone>
@@ -67,6 +68,7 @@
       <HintPath>..\packages\FTD2XX.Net.1.0.14\lib\FTD2XX_NET.dll</HintPath>
       <Private>True</Private>
     </Reference>
+    <Reference Include="Microsoft.VisualBasic" />
     <Reference Include="Microsoft.Win32.Primitives, Version=4.0.1.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
       <HintPath>..\packages\Microsoft.Win32.Primitives.4.0.1\lib\net46\Microsoft.Win32.Primitives.dll</HintPath>
       <Private>True</Private>
@@ -266,6 +268,8 @@
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="UnityConfiguration.cs" />
+    <Compile Include="Utils\Bindings.cs" />
+    <Compile Include="ViewModel\ProgressFormViewModel.cs" />
     <EmbeddedResource Include="Forms\DownloadForm.resx">
       <DependentUpon>DownloadForm.cs</DependentUpon>
     </EmbeddedResource>
@@ -333,6 +337,9 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="Resources\StatusOK_48x.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Properties\DataSources\" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>

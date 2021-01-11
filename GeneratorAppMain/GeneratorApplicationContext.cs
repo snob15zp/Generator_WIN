@@ -3,6 +3,7 @@ using GeneratorWindowsApp.Device;
 using GeneratorWindowsApp.Forms;
 using GeneratorWindowsApp.Messages;
 using GeneratorWindowsApp.Properties;
+using Microsoft.VisualBasic;
 using System;
 using System.Linq;
 using System.Windows.Forms;
@@ -23,13 +24,19 @@ namespace GeneratorWindowsApp
                 Icon = Resources.AppIcon,
                 ContextMenu = new ContextMenu(new MenuItem[] {
                     new MenuItem("Check For Updates", CheckForUpdates),
-                    new MenuItem("Download", (sender, e)=>MessageHandler_MessageReceived(sender, "/folders/4gGejPZxmJ56/download/ZXlKcGRpSTZJbXBMTlVWbldFMDFXV0pSTTBKVWEwcDRhMFE0TW5jOVBTSXNJblpoYkhWbElqb2lkVW95VDNSM1RUWnlXSEZZUzBkQlQzcGFiV2M0YVZGclZrOVFOa1pyVm1SWFVtOXROMVJ0ZEVGR1p6MGlMQ0p0WVdNaU9pSTNabU5pWm1SbU16STRNbU5pT1dKbE9EYzBPRGRsTW1RMllUTmpaVEl6WlRObFlUVXhOakF3T1dJNE56bGpZMkl5Wm1KbU1qTmpZelU0WVRBeU5HVTRJbjA9")),
+                    new MenuItem("Download", DownloadPrograms),
                     new MenuItem("Exit", Exit)
                 }),
                 Visible = true
             };
 
             messageHandler.MessageReceived += MessageHandler_MessageReceived;
+        }
+
+        private void DownloadPrograms(object sender, EventArgs e)
+        {
+            string url = Interaction.InputBox("Enter the download link", "Download programs");
+            MessageHandler_MessageReceived(this, url);
         }
 
         private void MessageHandler_MessageReceived(object sender, string e)
