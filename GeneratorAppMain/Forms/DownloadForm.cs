@@ -1,37 +1,37 @@
-﻿using GeneratorWindowsApp.Utils;
-using GeneratorWindowsApp.ViewModel;
+﻿using GeneratorAppMain.Utils;
+using GeneratorAppMain.ViewModel;
 using System;
 using System.Windows.Forms;
 
-namespace GeneratorWindowsApp.Forms
+namespace GeneratorAppMain.Forms
 {
     public partial class DownloadForm : Form
     {
-        private readonly ProgressFormViewModel progressFormViewModel;
+        private readonly ProgressFormViewModel _progressFormViewModel;
 
-        public DownloadForm(string url) : base()
+        public DownloadForm(string url)
         {
             InitializeComponent();
 
-            progressFormViewModel = new ProgressFormViewModel(this);
+            _progressFormViewModel = new ProgressFormViewModel(this);
             SetupBindings();
-            progressFormViewModel.DownloadPrograms(url);
+            _progressFormViewModel.DownloadPrograms(url);
         }
 
         private void SetupBindings()
         {
-            actionLabel.DataBindings.Add(new Binding("Text", progressFormViewModel, "DeviceStatusMessage"));
+            actionLabel.DataBindings.Add(new Binding("Text", _progressFormViewModel, "DeviceStatusMessage"));
 
-            infoLabel.DataBindings.Add(new Binding("Text", progressFormViewModel, "DeviceInfoMessage"));
-            infoLabel.DataBindings.Add(Bindings.VisibleNullableBinding(progressFormViewModel, "DeviceInfoMessage"));
+            infoLabel.DataBindings.Add(new Binding("Text", _progressFormViewModel, "DeviceInfoMessage"));
+            infoLabel.DataBindings.Add(Bindings.VisibleNullableBinding(_progressFormViewModel, "DeviceInfoMessage"));
 
-            progressBar.DataBindings.Add(new Binding("Visible", progressFormViewModel, "InProgress"));
-            okButton.DataBindings.Add(new Binding("Visible", progressFormViewModel, "IsFinished"));
+            progressBar.DataBindings.Add(new Binding("Visible", _progressFormViewModel, "InProgress"));
+            okButton.DataBindings.Add(new Binding("Visible", _progressFormViewModel, "IsFinished"));
 
-            resultPictureBox.DataBindings.Add(Bindings.VisibleNullableBinding(progressFormViewModel, "Icon"));
-            resultPictureBox.DataBindings.Add(new Binding("Image", progressFormViewModel, "Icon", true));
+            resultPictureBox.DataBindings.Add(Bindings.VisibleNullableBinding(_progressFormViewModel, "Icon"));
+            resultPictureBox.DataBindings.Add(new Binding("Image", _progressFormViewModel, "Icon", true));
 
-            cancelButton.DataBindings.Add(Bindings.NegativeVisibleBinding(progressFormViewModel, "IsFinished"));
+            cancelButton.DataBindings.Add(Bindings.NegativeVisibleBinding(_progressFormViewModel, "IsFinished"));
         }
 
         private void cancelButton_Click(object sender, EventArgs e)
@@ -41,7 +41,7 @@ namespace GeneratorWindowsApp.Forms
 
         private void DownloadForm_FormClosed(object sender, FormClosedEventArgs e)
         {
-            progressFormViewModel.Dispose();
+            _progressFormViewModel.Dispose();
         }
 
         private void okButton_Click(object sender, EventArgs e)

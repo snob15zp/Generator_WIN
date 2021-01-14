@@ -1,25 +1,20 @@
-﻿using GeneratorWindowsApp.Device;
+﻿using GeneratorAppMain.Device;
 using System;
-using System.Collections.Generic;
 using System.ComponentModel;
 using System.Drawing;
-using System.Linq;
-using System.Text;
 using System.Threading;
-using System.Threading.Tasks;
-using System.Windows.Forms;
 
-namespace GeneratorWindowsApp.ViewModel
+namespace GeneratorAppMain.ViewModel
 {
     class ProgressFormViewModel : INotifyPropertyChanged
     {
-        private static NLog.Logger logger = NLog.LogManager.GetCurrentClassLogger();
+        private static readonly NLog.Logger Logger = NLog.LogManager.GetCurrentClassLogger();
 
-        private readonly IDeviceManager deviceManager = UnityConfiguration.Resolve<IDeviceManager>();
-        private readonly CancellationTokenSource cancellationTokenSource = new CancellationTokenSource();
-        private readonly ISynchronizeInvoke syncObjec;
-        
-        private string latestVersion = null;
+        private readonly IDeviceManager _deviceManager = UnityConfiguration.Resolve<IDeviceManager>();
+        private readonly CancellationTokenSource _cancellationTokenSource = new CancellationTokenSource();
+        private readonly ISynchronizeInvoke _syncObject;
+
+        private string _latestVersion;
 
         public event PropertyChangedEventHandler PropertyChanged;
 
@@ -27,7 +22,7 @@ namespace GeneratorWindowsApp.ViewModel
         private string _deviceStatusMessage;
         public string DeviceStatusMessage
         {
-            get { return _deviceStatusMessage; }
+            get => _deviceStatusMessage;
             private set
             {
                 _deviceStatusMessage = value;
@@ -38,7 +33,7 @@ namespace GeneratorWindowsApp.ViewModel
         private string _deviceInfoMessage;
         public string DeviceInfoMessage
         {
-            get { return _deviceInfoMessage; }
+            get => _deviceInfoMessage;
             private set
             {
                 _deviceInfoMessage = value;
@@ -49,7 +44,7 @@ namespace GeneratorWindowsApp.ViewModel
         private bool _updateIsReady = false;
         public bool UpdateIsReady
         {
-            get { return _updateIsReady; }
+            get => _updateIsReady;
             private set
             {
                 _updateIsReady = value;
@@ -60,7 +55,7 @@ namespace GeneratorWindowsApp.ViewModel
         private bool _inProgress = false;
         public bool InProgress
         {
-            get { return _inProgress; }
+            get => _inProgress;
             private set
             {
                 _inProgress = value;
@@ -71,7 +66,7 @@ namespace GeneratorWindowsApp.ViewModel
         private bool _hasError = false;
         public bool HasError
         {
-            get { return _hasError; }
+            get => _hasError;
             private set
             {
                 _hasError = value;
@@ -82,7 +77,7 @@ namespace GeneratorWindowsApp.ViewModel
         private bool _isFinished = false;
         public bool IsFinished
         {
-            get { return _isFinished; }
+            get => _isFinished;
             private set
             {
                 _isFinished = value;
@@ -93,7 +88,7 @@ namespace GeneratorWindowsApp.ViewModel
         private Bitmap _icon;
         public Bitmap Icon
         {
-            get { return _icon; }
+            get => _icon;
             private set
             {
                 _icon = value;
@@ -101,10 +96,10 @@ namespace GeneratorWindowsApp.ViewModel
             }
         }
 
-        public ProgressFormViewModel(ISynchronizeInvoke syncObjec)
+        public ProgressFormViewModel(ISynchronizeInvoke syncObject)
         {
-            this.syncObjec = syncObjec;
-            deviceManager.DeviceUpdateStatusEvent += DeviceManager_DeviceUpdateStatusEvent;
+            _syncObject = syncObject;
+            _deviceManager.DeviceUpdateStatusEvent += DeviceManager_DeviceUpdateStatusEvent;
         }
 
         private void DeviceManager_DeviceUpdateStatusEvent(object sender, DeviceUpdateStatusEventArgs args)
@@ -115,14 +110,7 @@ namespace GeneratorWindowsApp.ViewModel
                     DeviceStatusMessage = "Downloading...";
                     break;
                 case DeviceUpdateStatus.Updating:
-                    if (args.Progress >= 0)
-                    {
-                        DeviceStatusMessage = $"Device update in progress ({args.Progress}%)";
-                    }
-                    else
-                    {
-                        DeviceStatusMessage = "Device update in progress...";
-                    }
+                    DeviceStatusMessage = args.Progress >= 0 ? $"Device update in progress ({args.Progress}%)" : "Device update in progress...";
                     break;
                 case DeviceUpdateStatus.Rebooting:
                     DeviceStatusMessage = "Wait for device rebooting...";
@@ -132,15 +120,15 @@ namespace GeneratorWindowsApp.ViewModel
             }
         }
 
-        private void NotifyPropertyChanged(String propertyName)
+        private void NotifyPropertyChanged(string propertyName)
         {
             if (PropertyChanged == null) return;
 
             var handler = PropertyChanged;
             var eventArgs = new PropertyChangedEventArgs(propertyName);
-            if (syncObjec.InvokeRequired)
+            if (_syncObject.InvokeRequired)
             {
-                syncObjec.BeginInvoke(handler, new object[] { this, eventArgs });
+                _syncObject.BeginInvoke(handler, new object[] { this, eventArgs });
             }
             else
             {
@@ -150,77 +138,77 @@ namespace GeneratorWindowsApp.ViewModel
 
         public async void DownloadPrograms(string url)
         {
-            switchToInProgressState("Downloading...");
+            SwitchToInProgressState("Downloading...");
             try
             {
-                await deviceManager.DonwloadPrograms(url, cancellationTokenSource.Token);
-                switchToSuccessState("Programs import successfully.");
+                await _deviceManager.DownloadPrograms(url, _cancellationTokenSource.Token);
+                SwitchToSuccessState("Programs import successfully.");
             }
-            catch (OperationCanceledException e) when (e.CancellationToken == cancellationTokenSource.Token)
+            catch (OperationCanceledException e) when (e.CancellationToken == _cancellationTokenSource.Token)
             {
-                logger.Info("Download was canceled.");
-                switchToErrorState("Operation was canceled.");
+                Logger.Info("Download was canceled.");
+                SwitchToErrorState("Operation was canceled.");
             }
             catch (DeviceException e)
             {
-                logger.Error(e, "Unable to download programs");
-                switchToErrorState(e.Message);
+                Logger.Error(e, "Unable to download programs");
+                SwitchToErrorState(e.Message);
             }
             catch (Exception e)
             {
-                logger.Error(e, "Unable to download programs");
-                switchToErrorState("Somethig wrong happened.");
+                Logger.Error(e, "Unable to download programs");
+                SwitchToErrorState("Something wrong happened.");
             }
         }
 
         public async void CheckForUpdates()
         {
-            switchToInProgressState("Checking for updates...");
+            SwitchToInProgressState("Checking for updates...");
             try
             {
-                var versionInfo = await deviceManager.CheckForUpdates(cancellationTokenSource.Token);
-                UpdateIsReady = versionInfo.isUpdateAvialable;
-                if (versionInfo.isUpdateAvialable)
+                var versionInfo = await _deviceManager.CheckForUpdates(_cancellationTokenSource.Token);
+                UpdateIsReady = versionInfo.isUpdateAvailable;
+                if (versionInfo.isUpdateAvailable)
                 {
-                    latestVersion = versionInfo.latestVersion.ToString();
+                    _latestVersion = versionInfo.latestVersion.ToString();
                     var currentVersion = versionInfo.currentVersion.ToString();
-                    switchToFinishState("Updates available.", $"Current version is {currentVersion}, latest version is {latestVersion}", null);
+                    SwitchToFinishState("Updates available.", $"Current version is {currentVersion}, latest version is {_latestVersion}", null);
                 }
                 else
                 {
-                    switchToFinishState("Latest version already installed", null, null);
+                    SwitchToFinishState("Latest version already installed", null, null);
                 }
             }
             catch (DeviceException e)
             {
-                switchToErrorState(e.Message);
+                SwitchToErrorState(e.Message);
             }
-            catch (OperationCanceledException e) when (e.CancellationToken == cancellationTokenSource.Token)
+            catch (OperationCanceledException e) when (e.CancellationToken == _cancellationTokenSource.Token)
             {
-                switchToErrorState("Operation was canceled.");
+                SwitchToErrorState("Operation was canceled.");
             }
         }
 
         public async void DownloadFirmware()
         {
-            switchToInProgressState("Updating...");
+            SwitchToInProgressState("Updating...");
             try
             {
-                await deviceManager.DownloadFirmware(latestVersion, cancellationTokenSource.Token);
-                switchToSuccessState("Device updated successfully.");
-                DeviceInfoMessage = $"Current version is {latestVersion}";
+                await _deviceManager.DownloadFirmware(_latestVersion, _cancellationTokenSource.Token);
+                SwitchToSuccessState("Device updated successfully.");
+                DeviceInfoMessage = $"Current version is {_latestVersion}";
             }
             catch (DeviceException e)
             {
-                switchToErrorState(e.Message);
+                SwitchToErrorState(e.Message);
             }
-            catch (OperationCanceledException e) when (e.CancellationToken == cancellationTokenSource.Token)
+            catch (OperationCanceledException e) when (e.CancellationToken == _cancellationTokenSource.Token)
             {
-                switchToErrorState("Operation was canceled.");
+                SwitchToErrorState("Operation was canceled.");
             }
         }
 
-        private void switchToInProgressState(string status)
+        private void SwitchToInProgressState(string status)
         {
             InProgress = true;
             IsFinished = false;
@@ -230,21 +218,21 @@ namespace GeneratorWindowsApp.ViewModel
             DeviceInfoMessage = null;
         }
 
-        private void switchToSuccessState(string message)
+        private void SwitchToSuccessState(string message)
         {
             HasError = false;
             IsFinished = true;
-            switchToFinishState(message, null, Properties.Resources.StatusOK_48x);
+            SwitchToFinishState(message, null, Properties.Resources.StatusOK_48x);
         }
 
-        private void switchToErrorState(string error)
+        private void SwitchToErrorState(string error)
         {
             HasError = true;
             IsFinished = true;
-            switchToFinishState("Error", error, Properties.Resources.StatusInvalid_48x);
+            SwitchToFinishState("Error", error, Properties.Resources.StatusInvalid_48x);
         }
 
-        private void switchToFinishState(string status, string info, Bitmap icon)
+        private void SwitchToFinishState(string status, string info, Bitmap icon)
         {
             InProgress = false;
             DeviceStatusMessage = status;
@@ -254,8 +242,8 @@ namespace GeneratorWindowsApp.ViewModel
 
         public void Dispose()
         {
-            cancellationTokenSource.Cancel(true);
-            deviceManager.DeviceUpdateStatusEvent -= DeviceManager_DeviceUpdateStatusEvent;
+            _cancellationTokenSource.Cancel(true);
+            _deviceManager.DeviceUpdateStatusEvent -= DeviceManager_DeviceUpdateStatusEvent;
         }
     }
 }

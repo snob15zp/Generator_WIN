@@ -1,0 +1,76 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<iasettings>
+  <projectproperties>
+    <manufacturer>aubal</manufacturer>
+    <productname>GeneratorWindows</productname>
+    <productversion>1.0.0.0</productversion>
+    <productcode>{903d7eb6-be5d-4e58-886f-f08fa839fd00}</productcode>
+    <upgradecode>{4d236a7b-e5c3-4788-a638-73441f0c97d1}</upgradecode>
+    <language>0</language>
+    <languagename>English</languagename>
+  </projectproperties>
+  <summary>
+    <title>GeneratorWindows</title>
+    <subject>GeneratorWindows</subject>
+    <author>aubal</author>
+    <summarycomments>GeneratorWindows</summarycomments>
+    <revisioncode>{e811253e-8b8b-4c20-89c9-f0eab43a7cee}</revisioncode>
+    <uacelevation>highestAvailable</uacelevation>
+  </summary>
+  <addremove>
+    <publishername>aubal</publishername>
+    <contactname>aubal</contactname>
+    <helplink>http://www.mywebsite.com</helplink>
+    <productupdatelink>http://www.mywebsite.com</productupdatelink>
+    <addremovecomments>All Rights Reserved</addremovecomments>
+    <iconfile />
+  </addremove>
+  <codegen>
+    <generateincludefiles>0</generateincludefiles>
+    <generatefeatures>1</generatefeatures>
+    <refreshscript>0</refreshscript>
+  </codegen>
+  <compilervariables>
+    <variables />
+  </compilervariables>
+  <build>
+    <buildtype>0</buildtype>
+    <buildasmsi>False</buildasmsi>
+    <cachesources>1</cachesources>
+  </build>
+  <targetfolders />
+  <files>
+    <filedetails filename="D:\workspace\personal\GeneratorWindows\GeneratorServerApi\bin\Debug\netstandard2.0\GeneratorServerApi.dll" targetlocation="$TARGETDIR$" type="3" generatenativeimage="0" registerassembly="0" runinstallerclass="0" createshortcut="0" runprogram="0" installfilecommand="1" />
+    <filedetails filename="D:\workspace\personal\GeneratorWindows\gen-uploader\GenLib\bin\Debug\netstandard2.0\GenLib.dll" targetlocation="$TARGETDIR$" type="3" generatenativeimage="0" registerassembly="0" runinstallerclass="0" createshortcut="0" runprogram="0" installfilecommand="1" />
+    <filedetails filename="D:\workspace\personal\GeneratorWindows\GeneratorAppMain\bin\Debug\generator.exe" targetlocation="$TARGETDIR$" type="1" generatenativeimage="0" registerassembly="0" runinstallerclass="0" createshortcut="1" runprogram="0" installfilecommand="1" />
+    <filedetails filename="D:\workspace\personal\GeneratorWindows\Project1\bin\Debug\generator-manager.exe" targetlocation="$TARGETDIR$" type="1" generatenativeimage="0" registerassembly="0" runinstallerclass="0" createshortcut="1" runprogram="0" installfilecommand="1" />
+  </files>
+  <dependencies />
+  <registry />
+  <dialogtheme>
+    <themename>Official</themename>
+  </dialogtheme>
+  <authenticode>
+    <sign>0</sign>
+    <mode>0</mode>
+    <certificatefile />
+    <keyfile />
+    <pfxfile />
+    <productinfourl />
+    <authpassword />
+    <timestampurl />
+    <signall>0</signall>
+  </authenticode>
+  <compression>
+    <compressiontype>8</compressiontype>
+    <encrypt>0</encrypt>
+    <compressionpassword />
+  </compression>
+  <output>
+    <outputtype>0</outputtype>
+    <location />
+    <filename />
+    <calculatefilehash>0</calculatefilehash>
+    <refreshrevisioncode>1</refreshrevisioncode>
+  </output>
+</iasettings>

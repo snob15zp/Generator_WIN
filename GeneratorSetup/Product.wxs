@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Wix xmlns="http://schemas.microsoft.com/wix/2006/wi"
+     xmlns:util="http://schemas.microsoft.com/wix/UtilExtension">
+
+  <Product Id="*" Name="Generator" Language="1033" Version="1.0.0.0" Manufacturer="Inhealion" UpgradeCode="2d1d73eb-9fc7-4e0f-8f88-ede321e9086e">
+    <Package InstallerVersion="200" Compressed="yes" InstallScope="perMachine" />
+
+    <MajorUpgrade DowngradeErrorMessage="A newer version of [ProductName] is already installed." />
+    <MediaTemplate />
+
+    <Feature Id="ProductFeature" Title="GeneratorSetup" Level="1">
+      <ComponentGroupRef Id="ProductComponents" />
+      <ComponentRef Id="CleanupMainApplicationFolder" />
+    </Feature>
+  </Product>
+
+  <Fragment>
+    <Property Id="INSTALLFOLDER">
+      <RegistrySearch Key="SOFTWARE\Inhealion\Generator" Root="HKLM" Type="raw" Id="APPLICATIONFOLDER_REGSEARCH" Name="Path" />
+    </Property>
+
+    <Directory Id="TARGETDIR" Name="SourceDir">
+      <Directory Id="ProgramFilesFolder">
+        <Directory Id="INSTALLFOLDER" Name="Generator" />
+      </Directory>
+    </Directory>
+
+    <DirectoryRef Id="INSTALLFOLDER">
+      <Component Id="CleanupMainApplicationFolder" Guid="*">
+        <RegistryValue Root="HKLM" Key="SOFTWARE\Inhealion\Generator" Name="Path" Type="string" Value="[INSTALLFOLDER]" KeyPath="yes" />
+        <util:RemoveFolderEx On="uninstall" Property="INSTALLFOLDER" />
+      </Component>
+ </DirectoryRef>
+  </Fragment>
+
+  <Fragment>
+    <ComponentGroup Id="ProductComponents" Directory="INSTALLFOLDER">
+      <Component Id="ProductComponent" Guid="787BED68-E057-4769-8D3C-A211ED60E0C6">
+        <File Source="$(var.GeneratorAppMain.TargetPath)"/>
+        <File Source="$(var.GeneratorAppManager.TargetPath)"/>
+        <File Source="$(var.GeneratorServerApi.TargetPath)"/>
+        <File Source="$(var.GenLib.TargetPath)"/>
+      </Component>
+
+      <Component Id="RegistryEntries" Guid="B31B50D5-A85E-4CE0-A417-25F510E5C087" KeyPath="yes">
+        <RegistryKey Root="HKCR"
+                     Key="generator"
+                     Action="createAndRemoveOnUninstall">
+          <RegistryKey Key="shell\open\command">
+            <RegistryValue Type="string" Value="[INSTALLFOLDER]generator-manager.exe %1"/>
+          </RegistryKey>
+
+          <RegistryValue Type="string" Value="URL: Generator Protocol"/>
+          <RegistryValue Type="string" Name="URL Protocol" Value="Default Value" />
+        </RegistryKey>
+      </Component>
+
+      <Component Id="LibsComponent" Guid="F127CED8-4E19-499E-8150-B69ACF03B527">
+        <File Source="$(var.GeneratorAppMain.TargetDir)ftd2xx.dll" />
+        <File Source="$(var.GeneratorAppMain.TargetDir)FTD2XX_NET.dll" />
+        <File Source="$(var.GeneratorAppMain.TargetDir)NModbus.dll" />
+        <File Source="$(var.GeneratorAppMain.TargetDir)NModbus.Serial.dll" />
+        <File Source="$(var.GeneratorAppMain.TargetDir)Unity.Abstractions.dll" />
+        <File Source="$(var.GeneratorAppMain.TargetDir)Unity.Container.dll" />
+        <File Source="$(var.GeneratorAppMain.TargetDir)RestSharp.dll" />
+
+        <File Source="$(var.GeneratorAppMain.TargetDir)System.Diagnostics.DiagnosticSource.dll" />
+        <File Source="$(var.GeneratorAppMain.TargetDir)System.IO.Ports.dll" />
+        <File Source="$(var.GeneratorAppMain.TargetDir)System.Runtime.CompilerServices.Unsafe.dll" />
+        <File Source="$(var.GeneratorAppMain.TargetDir)System.Diagnostics.Process.dll" />
+      </Component>
+    </ComponentGroup>
+  </Fragment>
+</Wix>

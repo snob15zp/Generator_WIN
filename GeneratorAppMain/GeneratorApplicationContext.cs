@@ -1,47 +1,50 @@
-﻿using GeneratorApiLibrary;
-using GeneratorWindowsApp.Device;
-using GeneratorWindowsApp.Forms;
-using GeneratorWindowsApp.Messages;
-using GeneratorWindowsApp.Properties;
+﻿using GeneratorAppMain.Forms;
+using GeneratorAppMain.Messages;
+using GeneratorAppMain.Properties;
 using Microsoft.VisualBasic;
 using System;
 using System.Linq;
 using System.Windows.Forms;
-using Unity;
 
-namespace GeneratorWindowsApp
+namespace GeneratorAppMain
 {
     class GeneratorApplicationContext : ApplicationContext
     {
-        private NotifyIcon trayIcon;
+        private readonly NotifyIcon _trayIcon;
 
-        private readonly IMessageHandler messageHandler = UnityConfiguration.Resolve<IMessageHandler>();
+        private readonly IMessageHandler _messageHandler = UnityConfiguration.Resolve<IMessageHandler>();
 
         public GeneratorApplicationContext()
         {
-            trayIcon = new NotifyIcon()
+            _trayIcon = new NotifyIcon()
             {
                 Icon = Resources.AppIcon,
-                ContextMenu = new ContextMenu(new MenuItem[] {
+                ContextMenu = new ContextMenu(new[] {
                     new MenuItem("Check For Updates", CheckForUpdates),
+                    //TODO: Just for test. Should remove from release build
                     new MenuItem("Download", DownloadPrograms),
                     new MenuItem("Exit", Exit)
                 }),
                 Visible = true
             };
 
-            messageHandler.MessageReceived += MessageHandler_MessageReceived;
+            _messageHandler.MessageReceived += MessageHandler_MessageReceived;
         }
 
         private void DownloadPrograms(object sender, EventArgs e)
         {
             string url = Interaction.InputBox("Enter the download link", "Download programs");
-            MessageHandler_MessageReceived(this, url);
+            if (!url.StartsWith("generator://inhealion.gr/generator"))
+            {
+                MessageBox.Show("The download link is not valid", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return;
+            }
+            MessageHandler_MessageReceived(this, url.Substring(34));
         }
 
         private void MessageHandler_MessageReceived(object sender, string e)
         {
-            if (Application.OpenForms.OfType<DownloadForm>().Count() > 0)
+            if (Application.OpenForms.OfType<DownloadForm>().Any())
             {
                 MessageBox.Show("Download already in progress", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 return;
@@ -52,18 +55,15 @@ namespace GeneratorWindowsApp
 
         private void CheckForUpdates(object sender, EventArgs e)
         {
-            (sender as MenuItem).Enabled = false;
+            ((MenuItem)sender).Enabled = false;
             var form = new VersionUpdateForm();
-            form.FormClosed += delegate (Object obj, FormClosedEventArgs args)
-            {
-                (sender as MenuItem).Enabled = true;
-            };
+            form.FormClosed += delegate { ((MenuItem)sender).Enabled = true; };
             form.ShowDialog();
         }
 
         private void Exit(object sender, EventArgs e)
         {
-            trayIcon.Dispose();
+            _trayIcon.Dispose();
             Application.Exit();
         }
     }

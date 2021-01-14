@@ -1,18 +1,11 @@
-﻿using GeneratorWindowsApp.Device;
-using GeneratorWindowsApp.Messages;
-using GenLib;
+﻿using GeneratorAppMain.Messages;
 using Microsoft.Win32;
 using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Runtime.InteropServices;
-using System.Security.Permissions;
 using System.Security.Principal;
-using System.Threading.Tasks;
 using System.Windows.Forms;
-using Unity;
 
-namespace GeneratorWindowsApp
+namespace GeneratorAppMain
 {
     static class Program
     {
@@ -27,39 +20,16 @@ namespace GeneratorWindowsApp
             PerMonitorAware = 2
         }
 
-        private static void RegisterCustomUriIfNeeded()
-        {
-            bool isAdmin;
-            using (WindowsIdentity identity = WindowsIdentity.GetCurrent())
-            {
-                WindowsPrincipal principal = new WindowsPrincipal(identity);
-                isAdmin = principal.IsInRole(WindowsBuiltInRole.Administrator);
-            }
-            if(isAdmin)
-            {
-                RegistryKey key;
-                key = Registry.ClassesRoot.CreateSubKey("generator");
-                key.SetValue("", "URL: Generator Protocol");
-                key.SetValue("URL Protocol", "");
-
-                key = key.CreateSubKey("shell");
-                key = key.CreateSubKey("open");
-                key = key.CreateSubKey("command");
-                key.SetValue("", "D:\\workspace\\personal\\GeneratorWindows\\GeneratorAppManager\\bin\\Debug\\netcoreapp3.1\\GeneratorAppManager.exe %1");
-            }
-        }
-
         /// <summary>
         /// The main entry point for the application.
         /// </summary>
         [STAThread]
         static void Main(string[] args)
         {
-            RegisterCustomUriIfNeeded();
             UnityConfiguration.RegisterComponents();
 
             var server = UnityConfiguration.Resolve<IMessageServer>();
-            server.start();
+            server.Start();
 
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
@@ -67,7 +37,7 @@ namespace GeneratorWindowsApp
 
             Application.Run(new GeneratorApplicationContext());
 
-            server.stop();
+            server.Stop();
         }
     }
 }

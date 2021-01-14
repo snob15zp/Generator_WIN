@@ -1,11 +1,7 @@
-﻿using GeneratorApiLibrary.Model;
-using GeneratorServerApi;
+﻿using GeneratorServerApi;
 using GeneratorServerApi.Model;
 using RestSharp;
-using RestSharp.Extensions;
 using RestSharp.Serialization.Json;
-using System;
-using System.Diagnostics;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;

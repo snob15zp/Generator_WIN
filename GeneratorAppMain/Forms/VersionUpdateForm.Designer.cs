@@ -1,4 +1,4 @@
-﻿namespace GeneratorWindowsApp.Forms
+﻿namespace GeneratorAppMain.Forms
 {
     partial class VersionUpdateForm
     {

@@ -1,4 +1,4 @@
-﻿namespace GeneratorWindowsApp.Forms
+﻿namespace GeneratorAppMain.Forms
 {
     partial class DownloadForm
     {
@@ -63,7 +63,7 @@
             // resultPictureBox
             // 
             this.resultPictureBox.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.resultPictureBox.Image = global::GeneratorWindowsApp.Properties.Resources.StatusInvalid_48x;
+            this.resultPictureBox.Image = global::GeneratorAppMain.Properties.Resources.StatusInvalid_48x;
             this.resultPictureBox.InitialImage = null;
             this.resultPictureBox.Location = new System.Drawing.Point(16, 16);
             this.resultPictureBox.Margin = new System.Windows.Forms.Padding(0);

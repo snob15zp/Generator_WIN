@@ -1,25 +1,20 @@
-﻿using GeneratorApiLibrary;
-using GeneratorWindowsApp.Device;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System;
 
-namespace GeneratorWindowsApp.Messages
+namespace GeneratorAppMain.Messages
 {
-    public interface IMessageHandler {
-        event EventHandler<String> MessageReceived;
+    public interface IMessageHandler
+    {
+        event EventHandler<string> MessageReceived;
 
-        void handle(string message);
+        void Handle(string message);
     }
 
-    public class MessageHandler: IMessageHandler
+    public class MessageHandler : IMessageHandler
     {
 
         public event EventHandler<string> MessageReceived;
 
-        public void handle(string message)
+        public void Handle(string message)
         {
             MessageReceived?.Invoke(this, message);
         }

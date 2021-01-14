@@ -1,20 +1,16 @@
-﻿using GenLib;
-using System;
-using System.Collections.Generic;
-
-namespace GeneratorWindowsApp.Device
+﻿namespace GeneratorAppMain.Device
 {
     interface IDeviceConnectionFactory
     {
-        IDeviceConnection connect();
+        IDeviceConnection Connect();
     }
 
     class DeviceConnectionFactory : IDeviceConnectionFactory
     {
-        public IDeviceConnection connect()
+        public IDeviceConnection Connect()
         {
-            //return new DeviceConnection();
-            return new FakeDeviceConnection();
+            return new DeviceConnection();
+            //return new FakeDeviceConnection();
         }
     }
 }

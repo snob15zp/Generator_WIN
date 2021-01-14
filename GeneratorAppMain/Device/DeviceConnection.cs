@@ -2,12 +2,9 @@
 using GenLib;
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Threading;
-using System.Threading.Tasks;
 
-namespace GeneratorWindowsApp.Device
+namespace GeneratorAppMain.Device
 {
     interface IDeviceConnection : IGenerator, IDisposable { }
 
@@ -24,10 +21,10 @@ namespace GeneratorWindowsApp.Device
 
         private static string GetSerialPort()
         {
-            FTDI ftdi_dev = new FTDI();
-            ftdi_dev.OpenByIndex(0);
-            FTDI.FT_STATUS status = ftdi_dev.GetCOMPort(out string port);
-            ftdi_dev.Close();
+            FTDI ftdi = new FTDI();
+            ftdi.OpenByIndex(0);
+            FTDI.FT_STATUS status = ftdi.GetCOMPort(out string port);
+            ftdi.Close();
             if (status == FTDI.FT_STATUS.FT_OK)
             {
                 return port;
@@ -68,7 +65,7 @@ namespace GeneratorWindowsApp.Device
 
         }
 
-        public ErrorCodes Erase(string Filename)
+        public ErrorCodes Erase(string filename)
         {
             return ErrorCodes.NoError;
         }
@@ -78,7 +75,7 @@ namespace GeneratorWindowsApp.Device
             return ErrorCodes.NoError;
         }
 
-        public ErrorCodes PutFile(string FileName, IEnumerable<byte> content)
+        public ErrorCodes PutFile(string fileName, IEnumerable<byte> content)
         {
             Thread.Sleep(1000);
             return ErrorCodes.NoError;

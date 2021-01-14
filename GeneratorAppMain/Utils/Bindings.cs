@@ -1,7 +1,7 @@
 ﻿
 using System.Windows.Forms;
 
-namespace GeneratorWindowsApp.Utils
+namespace GeneratorAppMain.Utils
 {
     public static class Bindings
     {

@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Wix xmlns="http://schemas.microsoft.com/wix/2006/wi"
+     xmlns:bal="http://schemas.microsoft.com/wix/BalExtension"
+     xmlns:netfx="http://schemas.microsoft.com/wix/NetFxExtension">
+  <Bundle Name="Generator" Version="1.0.0" Manufacturer="Inhealion" UpgradeCode="2d1d73eb-9fc7-4e0f-8f88-ede321e9086e">
+    <BootstrapperApplicationRef Id="WixStandardBootstrapperApplication.HyperlinkLicense" >
+      <bal:WixStandardBootstrapperApplication
+        LicenseUrl=""
+        ThemeFile="HyperlinkTheme.xml"
+        LogoFile="setup_64x64.png"
+        LocalizationFile="HyperlinkTheme.wxl" />
+    </BootstrapperApplicationRef>
+    <Chain>
+      <PackageGroupRef Id="NetFx461Redist"/>
+      <MsiPackage Id="Generator" SourceFile="$(var.GeneratorSetup.TargetPath)">
+        <MsiProperty Name="ARPSYSTEMCOMPONENT" Value="1"/>
+      </MsiPackage>
+    </Chain>
+  </Bundle>
+</Wix>

@@ -1,36 +1,32 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.IO;
+﻿using System.Diagnostics;
 using System.IO.Pipes;
-using System.Linq;
 using System.Security.AccessControl;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using System.Windows.Forms;
 
-namespace GeneratorWindowsApp.Messages
+namespace GeneratorAppMain.Messages
 {
-    public interface IMessageServer {
-        void start();
-        void stop();
+    public interface IMessageServer
+    {
+        void Start();
+        void Stop();
     }
 
 
-    public class MessageServer: IMessageServer
+    public class MessageServer : IMessageServer
     {
-        private static readonly int BUFFER_SIZE = 1024;
-        private static readonly string PIPE_NAME = "GeneratorPipe";
+        private const int BufferSize = 1024;
+        private const string PipeName = "GeneratorPipe";
 
 
-        private readonly NamedPipeServerStream namedPipeServer;
-        private readonly CancellationTokenSource cancellationTokenSource;
-        private readonly CancellationToken cancellationToken;
-        
-        private readonly IMessageHandler messageHandler;
+        private readonly NamedPipeServerStream _namedPipeServer;
+        private readonly CancellationTokenSource _cancellationTokenSource;
+        private readonly CancellationToken _cancellationToken;
 
-        private Task task = null;
+        private readonly IMessageHandler _messageHandler;
+
+        private Task _task = null;
 
         public MessageServer(IMessageHandler messageHandler)
         {
@@ -39,43 +35,43 @@ namespace GeneratorWindowsApp.Messages
             pipeSecurity.AddAccessRule(new PipeAccessRule("CREATOR OWNER", PipeAccessRights.FullControl, AccessControlType.Allow));
             pipeSecurity.AddAccessRule(new PipeAccessRule("SYSTEM", PipeAccessRights.FullControl, AccessControlType.Allow));
 
-            namedPipeServer =
-                new NamedPipeServerStream(PIPE_NAME, PipeDirection.InOut, 1, PipeTransmissionMode.Message, PipeOptions.WriteThrough, BUFFER_SIZE, BUFFER_SIZE, pipeSecurity);
+            _namedPipeServer =
+                new NamedPipeServerStream(PipeName, PipeDirection.InOut, 1, PipeTransmissionMode.Message, PipeOptions.WriteThrough, BufferSize, BufferSize, pipeSecurity);
 
-            cancellationTokenSource = new CancellationTokenSource();
-            cancellationToken = cancellationTokenSource.Token;
+            _cancellationTokenSource = new CancellationTokenSource();
+            _cancellationToken = _cancellationTokenSource.Token;
 
-            this.messageHandler = messageHandler;
+            this._messageHandler = messageHandler;
         }
 
-        public void start()
+        public void Start()
         {
-            if (task != null && task.Status == TaskStatus.Running) return;
+            if (_task != null && _task.Status == TaskStatus.Running) return;
 
-            task = new Task(pipeServerTask, cancellationToken);
-            task.Start();
+            _task = new Task(PipeServerTask, _cancellationToken);
+            _task.Start();
         }
 
-        public void stop()
+        public void Stop()
         {
-            cancellationTokenSource.Cancel();
-            if (task != null) task.Dispose();
+            _cancellationTokenSource.Cancel();
+            _task?.Dispose();
         }
 
-        private async void pipeServerTask()
+        private async void PipeServerTask()
         {
             Debug.WriteLine("Server started");
 
-            while (!cancellationToken.IsCancellationRequested)
+            while (!_cancellationToken.IsCancellationRequested)
             {
                 Debug.WriteLine("Wait for connection");
-                await namedPipeServer.WaitForConnectionAsync(cancellationToken);
+                await _namedPipeServer.WaitForConnectionAsync(_cancellationToken);
 
-                var message = readMessage(namedPipeServer);
-                Debug.WriteLine("Message recived: " + message);
+                var message = readMessage(_namedPipeServer);
+                Debug.WriteLine("Message received: " + message);
 
-                messageHandler.handle(message);
-                namedPipeServer.Disconnect();
+                _messageHandler.Handle(message);
+                _namedPipeServer.Disconnect();
             }
 
             Debug.WriteLine("Server finished");
@@ -84,12 +80,11 @@ namespace GeneratorWindowsApp.Messages
         private string readMessage(PipeStream pipeStream)
         {
             StringBuilder messageBuilder = new StringBuilder();
-            string messageChunk = string.Empty;
             byte[] messageBuffer = new byte[256];
             do
             {
                 var size = pipeStream.Read(messageBuffer, 0, messageBuffer.Length);
-                messageChunk = Encoding.UTF8.GetString(messageBuffer, 0, size);
+                var messageChunk = Encoding.UTF8.GetString(messageBuffer, 0, size);
                 messageBuilder.Append(messageChunk);
             }
             while (!pipeStream.IsMessageComplete);

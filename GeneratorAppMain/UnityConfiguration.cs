@@ -1,15 +1,9 @@
 ﻿using GeneratorApiLibrary;
-using GeneratorWindowsApp.Device;
-using GeneratorWindowsApp.Messages;
-using GenLib;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using GeneratorAppMain.Device;
+using GeneratorAppMain.Messages;
 using Unity;
 
-namespace GeneratorWindowsApp
+namespace GeneratorAppMain
 {
     public static class UnityConfiguration
     {
