@@ -6,6 +6,7 @@ using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Windows.Forms;
+using NLog.Fluent;
 
 namespace GeneratorAppManager
 {
@@ -36,6 +37,8 @@ namespace GeneratorAppManager
                         WorkingDirectory = args[0]
                     }
                 };
+
+                Logger.Info($"Start main process {path}");
                 try
                 {
                     process.Start();
@@ -48,8 +51,10 @@ namespace GeneratorAppManager
                     return;
                 }
             }
+
             using (NamedPipeClientStream namedPipeClient = new NamedPipeClientStream("GeneratorPipe"))
             {
+                Logger.Info($"Connect to pipe");
                 namedPipeClient.Connect();
                 string url = args[0].Substring(Prefix.Length);
                 byte[] messageBytes = Encoding.UTF8.GetBytes(url);

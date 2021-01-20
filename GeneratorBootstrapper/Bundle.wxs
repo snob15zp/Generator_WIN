@@ -2,7 +2,7 @@
 <Wix xmlns="http://schemas.microsoft.com/wix/2006/wi"
      xmlns:bal="http://schemas.microsoft.com/wix/BalExtension"
      xmlns:netfx="http://schemas.microsoft.com/wix/NetFxExtension">
-  <Bundle Name="Generator" Version="1.0.0" Manufacturer="Inhealion" UpgradeCode="2d1d73eb-9fc7-4e0f-8f88-ede321e9086e">
+  <Bundle Name="Generator" Version="1.0.0" Manufacturer="Inhealion" UpgradeCode="EDFF86BB-569F-4D15-8148-18FEE3AA8987">
     <BootstrapperApplicationRef Id="WixStandardBootstrapperApplication.HyperlinkLicense" >
       <bal:WixStandardBootstrapperApplication
         LicenseUrl=""
@@ -12,9 +12,7 @@
     </BootstrapperApplicationRef>
     <Chain>
       <PackageGroupRef Id="NetFx461Redist"/>
-      <MsiPackage Id="Generator" SourceFile="$(var.GeneratorSetup.TargetPath)">
-        <MsiProperty Name="ARPSYSTEMCOMPONENT" Value="1"/>
-      </MsiPackage>
+      <MsiPackage Id="Generator" SourceFile="$(var.GeneratorSetup.TargetPath)"/>
     </Chain>
   </Bundle>
 </Wix>

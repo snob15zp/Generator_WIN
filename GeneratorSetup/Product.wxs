@@ -2,26 +2,33 @@
 <Wix xmlns="http://schemas.microsoft.com/wix/2006/wi"
      xmlns:util="http://schemas.microsoft.com/wix/UtilExtension">
 
-  <Product Id="*" Name="Generator" Language="1033" Version="1.0.0.0" Manufacturer="Inhealion" UpgradeCode="2d1d73eb-9fc7-4e0f-8f88-ede321e9086e">
+  <Product Id="*" Name="Generator" Language="1033" Version="1.0.0.0" Manufacturer="Inhealion" UpgradeCode="E8FCD8E5-63B3-45C3-A995-B96573BF3205">
     <Package InstallerVersion="200" Compressed="yes" InstallScope="perMachine" />
+    <Upgrade Id="E8FCD8E5-63B3-45C3-A995-B96573BF3205"/>
 
-    <MajorUpgrade DowngradeErrorMessage="A newer version of [ProductName] is already installed." />
     <MediaTemplate />
 
     <Feature Id="ProductFeature" Title="GeneratorSetup" Level="1">
       <ComponentGroupRef Id="ProductComponents" />
       <ComponentRef Id="CleanupMainApplicationFolder" />
     </Feature>
+
+    <InstallExecuteSequence>
+      <RemoveExistingProducts After="InstallInitialize" /> 
+    </InstallExecuteSequence>
   </Product>
 
   <Fragment>
+    <Icon Id="favicon.exe" SourceFile="favicon.ico"/>
     <Property Id="INSTALLFOLDER">
       <RegistrySearch Key="SOFTWARE\Inhealion\Generator" Root="HKLM" Type="raw" Id="APPLICATIONFOLDER_REGSEARCH" Name="Path" />
     </Property>
+    <Property Id="ARPPRODUCTICON" Value="favicon.ico" />
 
     <Directory Id="TARGETDIR" Name="SourceDir">
+      <Directory Id="DesktopFolder" SourceName="Desktop" />
       <Directory Id="ProgramFilesFolder">
-        <Directory Id="INSTALLFOLDER" Name="Generator" />
+        <Directory Id="INSTALLFOLDER" Name="Generator"/>
       </Directory>
     </Directory>
 
@@ -30,16 +37,19 @@
         <RegistryValue Root="HKLM" Key="SOFTWARE\Inhealion\Generator" Name="Path" Type="string" Value="[INSTALLFOLDER]" KeyPath="yes" />
         <util:RemoveFolderEx On="uninstall" Property="INSTALLFOLDER" />
       </Component>
- </DirectoryRef>
+    </DirectoryRef>
   </Fragment>
 
   <Fragment>
     <ComponentGroup Id="ProductComponents" Directory="INSTALLFOLDER">
       <Component Id="ProductComponent" Guid="787BED68-E057-4769-8D3C-A211ED60E0C6">
-        <File Source="$(var.GeneratorAppMain.TargetPath)"/>
+        <File Source="$(var.GeneratorAppMain.TargetPath)">
+          <Shortcut Id="DesktopShortcut" Directory="DesktopFolder" Name="Generator" WorkingDirectory="INSTALLFOLDER" Advertise="yes" Icon="favicon.exe" />
+        </File>
         <File Source="$(var.GeneratorAppManager.TargetPath)"/>
         <File Source="$(var.GeneratorServerApi.TargetPath)"/>
         <File Source="$(var.GenLib.TargetPath)"/>
+        <File Source="favicon.ico"/>
       </Component>
 
       <Component Id="RegistryEntries" Guid="B31B50D5-A85E-4CE0-A417-25F510E5C087" KeyPath="yes">
@@ -63,6 +73,7 @@
         <File Source="$(var.GeneratorAppMain.TargetDir)Unity.Abstractions.dll" />
         <File Source="$(var.GeneratorAppMain.TargetDir)Unity.Container.dll" />
         <File Source="$(var.GeneratorAppMain.TargetDir)RestSharp.dll" />
+        <File Source="$(var.GeneratorAppMain.TargetDir)NLog.dll" />
 
         <File Source="$(var.GeneratorAppMain.TargetDir)System.Diagnostics.DiagnosticSource.dll" />
         <File Source="$(var.GeneratorAppMain.TargetDir)System.IO.Ports.dll" />

@@ -1,6 +1,7 @@
 ﻿using System.Diagnostics;
 using System.IO.Pipes;
 using System.Security.AccessControl;
+using System.Security.Principal;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -13,10 +14,10 @@ namespace GeneratorAppMain.Messages
         void Stop();
     }
 
-
     public class MessageServer : IMessageServer
     {
         private const int BufferSize = 1024;
+        private const int MaxNumberOfServers = 10;
         private const string PipeName = "GeneratorPipe";
 
 
@@ -30,13 +31,17 @@ namespace GeneratorAppMain.Messages
 
         public MessageServer(IMessageHandler messageHandler)
         {
+            SecurityIdentifier user = WindowsIdentity.GetCurrent().User;
             PipeSecurity pipeSecurity = new PipeSecurity();
-            pipeSecurity.AddAccessRule(new PipeAccessRule("Users", PipeAccessRights.ReadWrite | PipeAccessRights.CreateNewInstance, AccessControlType.Allow));
-            pipeSecurity.AddAccessRule(new PipeAccessRule("CREATOR OWNER", PipeAccessRights.FullControl, AccessControlType.Allow));
-            pipeSecurity.AddAccessRule(new PipeAccessRule("SYSTEM", PipeAccessRights.FullControl, AccessControlType.Allow));
+            pipeSecurity.AddAccessRule(new PipeAccessRule(user, PipeAccessRights.ReadWrite | PipeAccessRights.CreateNewInstance, AccessControlType.Allow));
+            pipeSecurity.SetGroup(user);
+            pipeSecurity.SetOwner(user);
 
             _namedPipeServer =
-                new NamedPipeServerStream(PipeName, PipeDirection.InOut, 1, PipeTransmissionMode.Message, PipeOptions.WriteThrough, BufferSize, BufferSize, pipeSecurity);
+                new NamedPipeServerStream(PipeName,
+                    PipeDirection.InOut, MaxNumberOfServers,
+                    PipeTransmissionMode.Message, PipeOptions.WriteThrough,
+                    BufferSize, BufferSize, pipeSecurity);
 
             _cancellationTokenSource = new CancellationTokenSource();
             _cancellationToken = _cancellationTokenSource.Token;

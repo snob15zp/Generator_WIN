@@ -46,7 +46,7 @@ namespace GeneratorApiLibrary
 
         private async Task DownloadFile(string path, string url, CancellationToken cancellationToken)
         {
-            var request = new RestRequest($"/api/{url}", Method.GET);
+            var request = new RestRequest($"/api{url}", Method.GET);
             var result = await ExecuteRaw(request, cancellationToken);
             if (result != null)
             {
