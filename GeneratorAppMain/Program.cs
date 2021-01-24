@@ -9,6 +9,8 @@ namespace GeneratorAppMain
 {
     static class Program
     {
+        private static readonly NLog.Logger Logger = NLog.LogManager.GetCurrentClassLogger();
+
         [DllImport("Shcore.dll")]
         static extern int SetProcessDpiAwareness(int PROCESS_DPI_AWARENESS);
 
@@ -26,6 +28,8 @@ namespace GeneratorAppMain
         [STAThread]
         static void Main(string[] args)
         {
+            Logger.Info("Application started");
+
             UnityConfiguration.RegisterComponents();
 
             var server = UnityConfiguration.Resolve<IMessageServer>();
@@ -38,6 +42,7 @@ namespace GeneratorAppMain
             Application.Run(new GeneratorApplicationContext());
 
             server.Stop();
+            NLog.LogManager.Shutdown();
         }
     }
 }

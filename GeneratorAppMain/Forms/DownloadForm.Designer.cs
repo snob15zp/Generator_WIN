@@ -35,8 +35,8 @@
             this.infoLabel = new System.Windows.Forms.Label();
             this.actionLabel = new System.Windows.Forms.Label();
             this.controlPanel = new System.Windows.Forms.FlowLayoutPanel();
-            this.cancelButton = new System.Windows.Forms.Button();
             this.okButton = new System.Windows.Forms.Button();
+            this.cancelButton = new System.Windows.Forms.Button();
             this.tableLayoutPanel.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.resultPictureBox)).BeginInit();
             this.tableLayoutPanel1.SuspendLayout();
@@ -69,6 +69,7 @@
             this.resultPictureBox.Margin = new System.Windows.Forms.Padding(0);
             this.resultPictureBox.Name = "resultPictureBox";
             this.resultPictureBox.Size = new System.Drawing.Size(48, 100);
+            this.resultPictureBox.SizeMode = System.Windows.Forms.PictureBoxSizeMode.AutoSize;
             this.resultPictureBox.TabIndex = 4;
             this.resultPictureBox.TabStop = false;
             // 
@@ -131,16 +132,6 @@
             this.controlPanel.Size = new System.Drawing.Size(581, 55);
             this.controlPanel.TabIndex = 6;
             // 
-            // cancelButton
-            // 
-            this.cancelButton.Location = new System.Drawing.Point(406, 11);
-            this.cancelButton.Name = "cancelButton";
-            this.cancelButton.Size = new System.Drawing.Size(75, 32);
-            this.cancelButton.TabIndex = 0;
-            this.cancelButton.Text = "Cancel";
-            this.cancelButton.UseVisualStyleBackColor = true;
-            this.cancelButton.Click += new System.EventHandler(this.cancelButton_Click);
-            // 
             // okButton
             // 
             this.okButton.Location = new System.Drawing.Point(487, 11);
@@ -150,6 +141,16 @@
             this.okButton.Text = "OK";
             this.okButton.UseVisualStyleBackColor = true;
             this.okButton.Click += new System.EventHandler(this.okButton_Click);
+            // 
+            // cancelButton
+            // 
+            this.cancelButton.Location = new System.Drawing.Point(406, 11);
+            this.cancelButton.Name = "cancelButton";
+            this.cancelButton.Size = new System.Drawing.Size(75, 32);
+            this.cancelButton.TabIndex = 0;
+            this.cancelButton.Text = "Cancel";
+            this.cancelButton.UseVisualStyleBackColor = true;
+            this.cancelButton.Click += new System.EventHandler(this.cancelButton_Click);
             // 
             // DownloadForm
             // 

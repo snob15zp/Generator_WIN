@@ -13,11 +13,13 @@ namespace GeneratorApiLibrary
     {
         Task<Firmware> GetLatestVersion();
         Task DonwloadFirmware(string version, string path, CancellationToken cancellationToken);
-        Task DonwloadPrograms(string url, string path, CancellationToken cancellationToken);
+        Task DownloadPrograms(string url, string path, CancellationToken cancellationToken);
     }
 
     public class GeneratorApi : IGeneratorApi
     {
+        private static readonly NLog.Logger Logger = NLog.LogManager.GetCurrentClassLogger();
+
         private RestClient client;
 
         public GeneratorApi(string baserUrl)
@@ -33,7 +35,7 @@ namespace GeneratorApiLibrary
             return DownloadFile(path, $"/firmware/{version}/download", cancellationToken);
         }
 
-        public Task DonwloadPrograms(string url, string path, CancellationToken cancellationToken)
+        public Task DownloadPrograms(string url, string path, CancellationToken cancellationToken)
         {
             return DownloadFile(path, url, cancellationToken);
         }
@@ -73,6 +75,7 @@ namespace GeneratorApiLibrary
         {
             if (!response.IsSuccessful)
             {
+                Logger.Error(response.ErrorException, $"Api error: {response.StatusCode}, {response.ErrorMessage}, {response.Content}");
                 var error = new JsonDeserializer().Deserialize<ResponseError>(response);
                 throw new ApiException(error.errors.status, error.errors.message);
             }

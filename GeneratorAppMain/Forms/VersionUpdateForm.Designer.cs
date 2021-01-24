@@ -30,6 +30,7 @@
         {
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(VersionUpdateForm));
             this.controlPanel = new System.Windows.Forms.FlowLayoutPanel();
+            this.okButton = new System.Windows.Forms.Button();
             this.cancelButton = new System.Windows.Forms.Button();
             this.updateButton = new System.Windows.Forms.Button();
             this.progressBar = new System.Windows.Forms.ProgressBar();
@@ -38,7 +39,6 @@
             this.resultPictureBox = new System.Windows.Forms.PictureBox();
             this.tableLayoutPanel = new System.Windows.Forms.TableLayoutPanel();
             this.tableLayoutPanel1 = new System.Windows.Forms.TableLayoutPanel();
-            this.okButton = new System.Windows.Forms.Button();
             this.controlPanel.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.resultPictureBox)).BeginInit();
             this.tableLayoutPanel.SuspendLayout();
@@ -57,6 +57,16 @@
             this.controlPanel.Padding = new System.Windows.Forms.Padding(0, 8, 16, 8);
             this.controlPanel.Size = new System.Drawing.Size(481, 56);
             this.controlPanel.TabIndex = 0;
+            // 
+            // okButton
+            // 
+            this.okButton.Location = new System.Drawing.Point(387, 11);
+            this.okButton.Name = "okButton";
+            this.okButton.Size = new System.Drawing.Size(75, 32);
+            this.okButton.TabIndex = 2;
+            this.okButton.Text = "OK";
+            this.okButton.UseVisualStyleBackColor = true;
+            this.okButton.Click += new System.EventHandler(this.okButton_Click);
             // 
             // cancelButton
             // 
@@ -116,6 +126,7 @@
             this.resultPictureBox.Margin = new System.Windows.Forms.Padding(0);
             this.resultPictureBox.Name = "resultPictureBox";
             this.resultPictureBox.Size = new System.Drawing.Size(48, 99);
+            this.resultPictureBox.SizeMode = System.Windows.Forms.PictureBoxSizeMode.AutoSize;
             this.resultPictureBox.TabIndex = 4;
             this.resultPictureBox.TabStop = false;
             // 
@@ -154,16 +165,6 @@
             this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle());
             this.tableLayoutPanel1.Size = new System.Drawing.Size(395, 93);
             this.tableLayoutPanel1.TabIndex = 5;
-            // 
-            // okButton
-            // 
-            this.okButton.Location = new System.Drawing.Point(387, 11);
-            this.okButton.Name = "okButton";
-            this.okButton.Size = new System.Drawing.Size(75, 32);
-            this.okButton.TabIndex = 2;
-            this.okButton.Text = "OK";
-            this.okButton.UseVisualStyleBackColor = true;
-            this.okButton.Click += new System.EventHandler(this.okButton_Click);
             // 
             // VersionUpdateForm
             // 

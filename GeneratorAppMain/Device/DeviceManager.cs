@@ -22,9 +22,9 @@ namespace GeneratorAppMain.Device
 
     public class DeviceVersionInfo
     {
-        public Version currentVersion { get; internal set; }
-        public Version latestVersion { get; internal set; }
-        public bool isUpdateAvailable => currentVersion.CompareTo(latestVersion) < 0;
+        public string CurrentVersion { get; internal set; }
+        public string LatestVersion { get; internal set; }
+        public bool IsUpdateAvailable => new Version(CurrentVersion).CompareTo(new Version(LatestVersion)) < 0;
     }
 
     public class DeviceUpdateStatusEventArgs
@@ -81,8 +81,8 @@ namespace GeneratorAppMain.Device
 
                 return new DeviceVersionInfo
                 {
-                    currentVersion = new Version(currentVersion),
-                    latestVersion = new Version(latestVersion)
+                    CurrentVersion = currentVersion,
+                    LatestVersion = latestVersion
                 };
             }
         }
@@ -131,11 +131,13 @@ namespace GeneratorAppMain.Device
             var tempFileName = Path.GetTempFileName();
             try
             {
-                await _api.DonwloadPrograms(url, tempFileName, cancellationToken);
+                await _api.DownloadPrograms(url, tempFileName, cancellationToken);
 
                 var tempPath = Path.GetTempPath() + Path.GetRandomFileName();
                 await Task.Run(() => ZipFile.ExtractToDirectory(tempFileName, tempPath), cancellationToken);
-                await Task.Run(() => ImportFiles(Directory.GetFiles(tempPath), cancellationToken, false), cancellationToken);
+                
+                var files = Directory.GetFiles(tempPath).OrderByDescending(Path.GetExtension).ToArray();
+                await Task.Run(() => ImportFiles(files, cancellationToken, false), cancellationToken);
             }
             catch (ApiException e)
             {

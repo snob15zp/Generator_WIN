@@ -16,7 +16,7 @@ namespace GeneratorAppMain.Forms
             _progressFormViewModel = new ProgressFormViewModel(this);
             SetupBindings();
 
-            _progressFormViewModel.CheckForUpdates();
+            _progressFormViewModel.CheckForUpdates(true);
         }
 
         private void SetupBindings()

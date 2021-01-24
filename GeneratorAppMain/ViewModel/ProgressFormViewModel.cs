@@ -161,17 +161,25 @@ namespace GeneratorAppMain.ViewModel
             }
         }
 
-        public async void CheckForUpdates()
+        public async void CheckForUpdates(bool forceUpdate)
         {
             SwitchToInProgressState("Checking for updates...");
             try
             {
                 var versionInfo = await _deviceManager.CheckForUpdates(_cancellationTokenSource.Token);
-                UpdateIsReady = versionInfo.isUpdateAvailable;
-                if (versionInfo.isUpdateAvailable)
+                UpdateIsReady = versionInfo.IsUpdateAvailable;
+                if (forceUpdate)
                 {
-                    _latestVersion = versionInfo.latestVersion.ToString();
-                    var currentVersion = versionInfo.currentVersion.ToString();
+                    _latestVersion = versionInfo.LatestVersion;
+                    var currentVersion = versionInfo.CurrentVersion;
+                    SwitchToFinishState($"Latest stable version {_latestVersion}, current version {currentVersion}", "Do you want to update your firmware?", null);
+                    return;
+                }
+
+                if (versionInfo.IsUpdateAvailable)
+                {
+                    _latestVersion = versionInfo.LatestVersion.ToString();
+                    var currentVersion = versionInfo.CurrentVersion.ToString();
                     SwitchToFinishState("Updates available.", $"Current version is {currentVersion}, latest version is {_latestVersion}", null);
                 }
                 else
