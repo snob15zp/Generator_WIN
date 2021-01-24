@@ -135,7 +135,9 @@ namespace GeneratorAppMain.Device
 
                 var tempPath = Path.GetTempPath() + Path.GetRandomFileName();
                 await Task.Run(() => ZipFile.ExtractToDirectory(tempFileName, tempPath), cancellationToken);
-                
+
+                await ClearAllPrograms(cancellationToken);
+
                 var files = Directory.GetFiles(tempPath).OrderByDescending(Path.GetExtension).ToArray();
                 await Task.Run(() => ImportFiles(files, cancellationToken, false), cancellationToken);
             }
@@ -146,9 +148,20 @@ namespace GeneratorAppMain.Device
             }
             catch (SystemException e)
             {
-                Logger.Error(e, "Unable to update device");
-                throw new DeviceException("Unable to extract data");
+                Logger.Error(e, "Unable to import programs");
+                throw new DeviceException("Unable to import programs");
             }
+        }
+
+        private async Task ClearAllPrograms(CancellationToken cancellationToken)
+        {
+            await Task.Run(() =>
+            {
+                using (var device = _deviceConnectionFactory.Connect())
+                {
+                    device.EraseByExt(".txt");
+                }
+            }, cancellationToken);
         }
 
         private async Task UpdateFirmware(string path, CancellationToken cancellationToken)

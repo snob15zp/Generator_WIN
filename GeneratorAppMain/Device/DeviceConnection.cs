@@ -75,6 +75,12 @@ namespace GeneratorAppMain.Device
             return ErrorCodes.NoError;
         }
 
+        public ErrorCodes EraseByExt(string Ext)
+        {
+            Thread.Sleep(1000);
+            return ErrorCodes.NoError;
+        }
+
         public ErrorCodes PutFile(string fileName, IEnumerable<byte> content)
         {
             Thread.Sleep(1000);
