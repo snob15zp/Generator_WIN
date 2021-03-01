@@ -1,7 +1,7 @@
-﻿using GeneratorAppMain.Utils;
-using GeneratorAppMain.ViewModel;
-using System;
+﻿using System;
 using System.Windows.Forms;
+using GeneratorAppMain.Utils;
+using GeneratorAppMain.ViewModel;
 
 namespace GeneratorAppMain.Forms
 {

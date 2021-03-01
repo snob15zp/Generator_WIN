@@ -1,43 +1,36 @@
-﻿using FTD2XX_NET;
-using GenLib;
-using System;
+﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
+using GenLib;
 
 namespace GeneratorAppMain.Device
 {
-    interface IDeviceConnection : IGenerator, IDisposable { }
-
-    class DeviceConnection : GenG070V1, IDeviceConnection
+    internal interface IDeviceConnection : IGenerator, IDisposable
     {
-        public DeviceConnection() : base(GetSerialPort())
-        {
-        }
+    }
+
+    internal class DeviceConnection : GenG070V1, IDeviceConnection
+    {
+        public DeviceConnection() : base(GetSerialPortDescription()) { }
 
         public void Dispose()
         {
             Disconnect();
         }
 
-        private static string GetSerialPort()
+        private static string GetSerialPortDescription()
         {
-            FTDI ftdi = new FTDI();
-            ftdi.OpenByIndex(0);
-            FTDI.FT_STATUS status = ftdi.GetCOMPort(out string port);
-            ftdi.Close();
-            if (status == FTDI.FT_STATUS.FT_OK)
-            {
-                return port;
-            }
-            else
-            {
-                throw new DeviceNotConnectedException();
-            }
+            var devices = ListFtdiDevices().ToArray();
+            if (devices.Length > 0)
+                return devices[0];
+            throw new DeviceNotConnectedException();
         }
     }
 
-    class FakeDeviceConnection : IDeviceConnection
+    internal class FakeDeviceConnection : IDeviceConnection
     {
+        public bool Ready { get; }
         public string Version => "0.0.1";
 
         public byte[] Serial => throw new NotImplementedException();
@@ -62,12 +55,11 @@ namespace GeneratorAppMain.Device
 
         public void Disconnect()
         {
-
         }
 
-        public ErrorCodes Erase(string filename)
+        public bool TryToInit()
         {
-            return ErrorCodes.NoError;
+            return true;
         }
 
         public ErrorCodes EraseAll()
@@ -81,7 +73,7 @@ namespace GeneratorAppMain.Device
             return ErrorCodes.NoError;
         }
 
-        public ErrorCodes PutFile(string fileName, IEnumerable<byte> content)
+        public ErrorCodes PutFile(string fileName, IEnumerable<byte> content, bool encrypted)
         {
             Thread.Sleep(1000);
             return ErrorCodes.NoError;
@@ -89,6 +81,16 @@ namespace GeneratorAppMain.Device
 
         public void Dispose()
         {
+        }
+
+        public ErrorCodes Erase(string filename)
+        {
+            return ErrorCodes.NoError;
+        }
+
+        public void BootloaderSetVersion(Version version)
+        {
+            throw new NotImplementedException();
         }
     }
 }

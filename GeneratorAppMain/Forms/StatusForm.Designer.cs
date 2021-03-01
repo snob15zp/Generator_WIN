@@ -30,60 +30,114 @@ namespace GeneratorAppMain.Forms
         private void InitializeComponent()
         {
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(StatusForm));
-            this.OkButton = new System.Windows.Forms.Button();
-            this.label1 = new System.Windows.Forms.Label();
-            this.label2 = new System.Windows.Forms.Label();
+            this.okButton = new System.Windows.Forms.Button();
+            this.latestFirmwareVersionLabel = new System.Windows.Forms.Label();
+            this.deviceFirmwareVesrionLabel = new System.Windows.Forms.Label();
+            this.installButton = new System.Windows.Forms.Button();
+            this.refreshButton = new System.Windows.Forms.Button();
+            this.infoPanel = new System.Windows.Forms.Panel();
+            this.progressBar = new System.Windows.Forms.ProgressBar();
+            this.infoPanel.SuspendLayout();
             this.SuspendLayout();
             // 
-            // OkButton
+            // okButton
             // 
-            this.OkButton.Location = new System.Drawing.Point(459, 119);
-            this.OkButton.Name = "OkButton";
-            this.OkButton.Size = new System.Drawing.Size(75, 28);
-            this.OkButton.TabIndex = 0;
-            this.OkButton.Text = "OK";
-            this.OkButton.UseVisualStyleBackColor = true;
+            this.okButton.Location = new System.Drawing.Point(459, 94);
+            this.okButton.Name = "okButton";
+            this.okButton.Size = new System.Drawing.Size(75, 28);
+            this.okButton.TabIndex = 0;
+            this.okButton.Text = "Cancel";
+            this.okButton.UseVisualStyleBackColor = true;
+            this.okButton.Click += new System.EventHandler(this.okButton_Click);
             // 
-            // label1
+            // latestFirmwareVersionLabel
             // 
-            this.label1.AutoSize = true;
-            this.label1.Location = new System.Drawing.Point(13, 13);
-            this.label1.Name = "label1";
-            this.label1.Size = new System.Drawing.Size(162, 17);
-            this.label1.TabIndex = 1;
-            this.label1.Text = "Latest firmware version: ";
+            this.latestFirmwareVersionLabel.AutoSize = true;
+            this.latestFirmwareVersionLabel.Location = new System.Drawing.Point(3, 0);
+            this.latestFirmwareVersionLabel.Name = "latestFirmwareVersionLabel";
+            this.latestFirmwareVersionLabel.Size = new System.Drawing.Size(198, 17);
+            this.latestFirmwareVersionLabel.TabIndex = 1;
+            this.latestFirmwareVersionLabel.Text = "Latest firmware version:  1.0.4";
             // 
-            // label2
+            // deviceFirmwareVesrionLabel
             // 
-            this.label2.AutoSize = true;
-            this.label2.Location = new System.Drawing.Point(13, 43);
-            this.label2.Name = "label2";
-            this.label2.Size = new System.Drawing.Size(97, 17);
-            this.label2.TabIndex = 2;
-            this.label2.Text = "Device status:";
+            this.deviceFirmwareVesrionLabel.AutoSize = true;
+            this.deviceFirmwareVesrionLabel.Location = new System.Drawing.Point(3, 29);
+            this.deviceFirmwareVesrionLabel.Name = "deviceFirmwareVesrionLabel";
+            this.deviceFirmwareVesrionLabel.Size = new System.Drawing.Size(198, 17);
+            this.deviceFirmwareVesrionLabel.TabIndex = 5;
+            this.deviceFirmwareVesrionLabel.Text = "Device firmware version: 1.0.0";
+            // 
+            // installButton
+            // 
+            this.installButton.Location = new System.Drawing.Point(16, 94);
+            this.installButton.Name = "installButton";
+            this.installButton.Size = new System.Drawing.Size(75, 28);
+            this.installButton.TabIndex = 6;
+            this.installButton.Text = "Flash";
+            this.installButton.UseVisualStyleBackColor = true;
+            this.installButton.Click += new System.EventHandler(this.installButton_Click);
+            // 
+            // refreshButton
+            // 
+            this.refreshButton.Location = new System.Drawing.Point(97, 94);
+            this.refreshButton.Name = "refreshButton";
+            this.refreshButton.Size = new System.Drawing.Size(75, 28);
+            this.refreshButton.TabIndex = 7;
+            this.refreshButton.Text = "Refresh";
+            this.refreshButton.UseVisualStyleBackColor = true;
+            this.refreshButton.Click += new System.EventHandler(this.refreshButton_Click);
+            // 
+            // infoPanel
+            // 
+            this.infoPanel.Controls.Add(this.deviceFirmwareVesrionLabel);
+            this.infoPanel.Controls.Add(this.latestFirmwareVersionLabel);
+            this.infoPanel.Location = new System.Drawing.Point(16, 14);
+            this.infoPanel.Name = "infoPanel";
+            this.infoPanel.Size = new System.Drawing.Size(518, 64);
+            this.infoPanel.TabIndex = 8;
+            // 
+            // progressBar
+            // 
+            this.progressBar.Location = new System.Drawing.Point(0, 0);
+            this.progressBar.MarqueeAnimationSpeed = 10;
+            this.progressBar.Name = "progressBar";
+            this.progressBar.Size = new System.Drawing.Size(552, 8);
+            this.progressBar.Step = 30;
+            this.progressBar.Style = System.Windows.Forms.ProgressBarStyle.Marquee;
+            this.progressBar.TabIndex = 9;
             // 
             // StatusForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 16F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(546, 159);
-            this.Controls.Add(this.label2);
-            this.Controls.Add(this.label1);
-            this.Controls.Add(this.OkButton);
+            this.ClientSize = new System.Drawing.Size(551, 137);
+            this.Controls.Add(this.progressBar);
+            this.Controls.Add(this.infoPanel);
+            this.Controls.Add(this.refreshButton);
+            this.Controls.Add(this.installButton);
+            this.Controls.Add(this.okButton);
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedDialog;
             this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
+            this.MaximizeBox = false;
             this.Name = "StatusForm";
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
             this.Text = "Device Status";
+            this.FormClosed += new System.Windows.Forms.FormClosedEventHandler(this.StatusForm_FormClosed);
+            this.infoPanel.ResumeLayout(false);
+            this.infoPanel.PerformLayout();
             this.ResumeLayout(false);
-            this.PerformLayout();
 
         }
 
         #endregion
 
-        private System.Windows.Forms.Button OkButton;
-        private System.Windows.Forms.Label label1;
-        private System.Windows.Forms.Label label2;
+        private System.Windows.Forms.Button okButton;
+        private System.Windows.Forms.Label latestFirmwareVersionLabel;
+        private System.Windows.Forms.Label deviceFirmwareVesrionLabel;
+        private System.Windows.Forms.Button installButton;
+        private System.Windows.Forms.Button refreshButton;
+        private System.Windows.Forms.Panel infoPanel;
+        private System.Windows.Forms.ProgressBar progressBar;
     }
 }

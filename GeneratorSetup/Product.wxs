@@ -66,6 +66,7 @@
       </Component>
 
       <Component Id="LibsComponent" Guid="F127CED8-4E19-499E-8150-B69ACF03B527">
+        <File Source="$(var.GeneratorAppMain.TargetDir)generator.exe.config" />
         <File Source="$(var.GeneratorAppMain.TargetDir)ftd2xx.dll" />
         <File Source="$(var.GeneratorAppMain.TargetDir)FTD2XX_NET.dll" />
         <File Source="$(var.GeneratorAppMain.TargetDir)NModbus.dll" />
@@ -73,12 +74,16 @@
         <File Source="$(var.GeneratorAppMain.TargetDir)Unity.Abstractions.dll" />
         <File Source="$(var.GeneratorAppMain.TargetDir)Unity.Container.dll" />
         <File Source="$(var.GeneratorAppMain.TargetDir)RestSharp.dll" />
-        <File Source="$(var.GeneratorAppMain.TargetDir)NLog.dll" />
+        <File Source="$(var.GeneratorAppMain.TargetDir)log4net.dll" />
 
         <File Source="$(var.GeneratorAppMain.TargetDir)System.Diagnostics.DiagnosticSource.dll" />
         <File Source="$(var.GeneratorAppMain.TargetDir)System.IO.Ports.dll" />
+        <File Source="$(var.GeneratorAppMain.TargetDir)System.IO.Compression.dll" />
         <File Source="$(var.GeneratorAppMain.TargetDir)System.Runtime.CompilerServices.Unsafe.dll" />
+        <File Source="$(var.GeneratorAppMain.TargetDir)System.Runtime.dll" />
         <File Source="$(var.GeneratorAppMain.TargetDir)System.Diagnostics.Process.dll" />
+
+        <File Source="$(var.GeneratorAppManager.TargetDir)generator-manager.exe.config" />
       </Component>
     </ComponentGroup>
   </Fragment>

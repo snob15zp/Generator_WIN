@@ -19,21 +19,22 @@ namespace GeneratorAppMain.Messages
         private const int BufferSize = 1024;
         private const int MaxNumberOfServers = 10;
         private const string PipeName = "GeneratorPipe";
-
-
-        private readonly NamedPipeServerStream _namedPipeServer;
-        private readonly CancellationTokenSource _cancellationTokenSource;
         private readonly CancellationToken _cancellationToken;
+        private readonly CancellationTokenSource _cancellationTokenSource;
 
         private readonly IMessageHandler _messageHandler;
 
-        private Task _task = null;
+
+        private readonly NamedPipeServerStream _namedPipeServer;
+
+        private Task _task;
 
         public MessageServer(IMessageHandler messageHandler)
         {
-            SecurityIdentifier user = WindowsIdentity.GetCurrent().User;
-            PipeSecurity pipeSecurity = new PipeSecurity();
-            pipeSecurity.AddAccessRule(new PipeAccessRule(user, PipeAccessRights.ReadWrite | PipeAccessRights.CreateNewInstance, AccessControlType.Allow));
+            var user = WindowsIdentity.GetCurrent().User;
+            var pipeSecurity = new PipeSecurity();
+            pipeSecurity.AddAccessRule(new PipeAccessRule(user,
+                PipeAccessRights.ReadWrite | PipeAccessRights.CreateNewInstance, AccessControlType.Allow));
             pipeSecurity.SetGroup(user);
             pipeSecurity.SetOwner(user);
 
@@ -46,7 +47,7 @@ namespace GeneratorAppMain.Messages
             _cancellationTokenSource = new CancellationTokenSource();
             _cancellationToken = _cancellationTokenSource.Token;
 
-            this._messageHandler = messageHandler;
+            _messageHandler = messageHandler;
         }
 
         public void Start()
@@ -84,15 +85,15 @@ namespace GeneratorAppMain.Messages
 
         private string readMessage(PipeStream pipeStream)
         {
-            StringBuilder messageBuilder = new StringBuilder();
-            byte[] messageBuffer = new byte[256];
+            var messageBuilder = new StringBuilder();
+            var messageBuffer = new byte[256];
             do
             {
                 var size = pipeStream.Read(messageBuffer, 0, messageBuffer.Length);
                 var messageChunk = Encoding.UTF8.GetString(messageBuffer, 0, size);
                 messageBuilder.Append(messageChunk);
-            }
-            while (!pipeStream.IsMessageComplete);
+            } while (!pipeStream.IsMessageComplete);
+
             return messageBuilder.ToString().TrimEnd();
         }
     }

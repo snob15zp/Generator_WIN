@@ -18,7 +18,7 @@ namespace GeneratorApiLibrary
 
     public class GeneratorApi : IGeneratorApi
     {
-        private static readonly NLog.Logger Logger = NLog.LogManager.GetCurrentClassLogger();
+        private static readonly log4net.ILog Logger = log4net.LogManager.GetLogger(typeof(GeneratorApi));
 
         private RestClient client;
 
@@ -75,7 +75,7 @@ namespace GeneratorApiLibrary
         {
             if (!response.IsSuccessful)
             {
-                Logger.Error(response.ErrorException, $"Api error: {response.StatusCode}, {response.ErrorMessage}, {response.Content}");
+                Logger.Error($"Api error: {response.StatusCode}, {response.ErrorMessage}, {response.Content}", response.ErrorException);
                 var error = new JsonDeserializer().Deserialize<ResponseError>(response);
                 throw new ApiException(error.errors.status, error.errors.message);
             }

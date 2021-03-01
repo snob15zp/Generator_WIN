@@ -1,25 +1,46 @@
-﻿using GeneratorAppMain.Device;
-using System;
+﻿using System;
 using System.ComponentModel;
 using System.Drawing;
 using System.Threading;
+using GeneratorAppMain.Device;
+using GeneratorAppMain.Properties;
+using log4net;
 
 namespace GeneratorAppMain.ViewModel
 {
-    class ProgressFormViewModel : INotifyPropertyChanged
+    internal class ProgressFormViewModel : INotifyPropertyChanged
     {
-        private static readonly NLog.Logger Logger = NLog.LogManager.GetCurrentClassLogger();
+        private static readonly ILog Logger = LogManager.GetLogger(typeof(ProgressFormViewModel));
+        private readonly CancellationTokenSource _cancellationTokenSource = new CancellationTokenSource();
 
         private readonly IDeviceManager _deviceManager = UnityConfiguration.Resolve<IDeviceManager>();
-        private readonly CancellationTokenSource _cancellationTokenSource = new CancellationTokenSource();
         private readonly ISynchronizeInvoke _syncObject;
 
-        private string _latestVersion;
-
-        public event PropertyChangedEventHandler PropertyChanged;
+        private string _deviceInfoMessage;
 
 
         private string _deviceStatusMessage;
+
+        private bool _hasError;
+
+        private Bitmap _icon;
+
+        private bool _inProgress;
+
+        private bool _isFinished;
+
+        private string _latestVersion;
+
+        private bool _updateIsReady;
+
+        public string Version { get { return _latestVersion; } }
+
+        public ProgressFormViewModel(ISynchronizeInvoke syncObject)
+        {
+            _syncObject = syncObject;
+            _deviceManager.DeviceUpdateStatusEvent += DeviceManager_DeviceUpdateStatusEvent;
+        }
+
         public string DeviceStatusMessage
         {
             get => _deviceStatusMessage;
@@ -30,7 +51,6 @@ namespace GeneratorAppMain.ViewModel
             }
         }
 
-        private string _deviceInfoMessage;
         public string DeviceInfoMessage
         {
             get => _deviceInfoMessage;
@@ -41,7 +61,6 @@ namespace GeneratorAppMain.ViewModel
             }
         }
 
-        private bool _updateIsReady = false;
         public bool UpdateIsReady
         {
             get => _updateIsReady;
@@ -52,7 +71,6 @@ namespace GeneratorAppMain.ViewModel
             }
         }
 
-        private bool _inProgress = false;
         public bool InProgress
         {
             get => _inProgress;
@@ -63,7 +81,6 @@ namespace GeneratorAppMain.ViewModel
             }
         }
 
-        private bool _hasError = false;
         public bool HasError
         {
             get => _hasError;
@@ -74,7 +91,6 @@ namespace GeneratorAppMain.ViewModel
             }
         }
 
-        private bool _isFinished = false;
         public bool IsFinished
         {
             get => _isFinished;
@@ -85,7 +101,6 @@ namespace GeneratorAppMain.ViewModel
             }
         }
 
-        private Bitmap _icon;
         public Bitmap Icon
         {
             get => _icon;
@@ -96,11 +111,7 @@ namespace GeneratorAppMain.ViewModel
             }
         }
 
-        public ProgressFormViewModel(ISynchronizeInvoke syncObject)
-        {
-            _syncObject = syncObject;
-            _deviceManager.DeviceUpdateStatusEvent += DeviceManager_DeviceUpdateStatusEvent;
-        }
+        public event PropertyChangedEventHandler PropertyChanged;
 
         private void DeviceManager_DeviceUpdateStatusEvent(object sender, DeviceUpdateStatusEventArgs args)
         {
@@ -110,7 +121,9 @@ namespace GeneratorAppMain.ViewModel
                     DeviceStatusMessage = "Downloading...";
                     break;
                 case DeviceUpdateStatus.Updating:
-                    DeviceStatusMessage = args.Progress >= 0 ? $"Device update in progress ({args.Progress}%)" : "Device update in progress...";
+                    DeviceStatusMessage = args.Progress >= 0
+                        ? $"Device update in progress ({args.Progress}%)"
+                        : "Device update in progress...";
                     break;
                 case DeviceUpdateStatus.Rebooting:
                     DeviceStatusMessage = "Wait for device rebooting...";
@@ -127,13 +140,9 @@ namespace GeneratorAppMain.ViewModel
             var handler = PropertyChanged;
             var eventArgs = new PropertyChangedEventArgs(propertyName);
             if (_syncObject.InvokeRequired)
-            {
-                _syncObject.BeginInvoke(handler, new object[] { this, eventArgs });
-            }
+                _syncObject.BeginInvoke(handler, new object[] {this, eventArgs});
             else
-            {
                 handler.Invoke(this, eventArgs);
-            }
         }
 
         public async void DownloadPrograms(string url)
@@ -151,12 +160,12 @@ namespace GeneratorAppMain.ViewModel
             }
             catch (DeviceException e)
             {
-                Logger.Error(e, "Unable to download programs");
+                Logger.Error("Unable to download programs", e);
                 SwitchToErrorState(e.Message);
             }
             catch (Exception e)
             {
-                Logger.Error(e, "Unable to download programs");
+                Logger.Error("Unable to download programs", e);
                 SwitchToErrorState("Something wrong happened.");
             }
         }
@@ -167,20 +176,22 @@ namespace GeneratorAppMain.ViewModel
             try
             {
                 var versionInfo = await _deviceManager.CheckForUpdates(_cancellationTokenSource.Token);
-                UpdateIsReady = versionInfo.IsUpdateAvailable;
+                UpdateIsReady = versionInfo.IsUpdateAvailable || forceUpdate;
                 if (forceUpdate)
                 {
                     _latestVersion = versionInfo.LatestVersion;
                     var currentVersion = versionInfo.CurrentVersion;
-                    SwitchToFinishState($"Latest stable version {_latestVersion}, current version {currentVersion}", "Do you want to update your firmware?", null);
+                    SwitchToFinishState($"Latest stable version {_latestVersion}, current version {currentVersion}",
+                        "Do you want to update your firmware?", null);
                     return;
                 }
 
                 if (versionInfo.IsUpdateAvailable)
                 {
-                    _latestVersion = versionInfo.LatestVersion.ToString();
-                    var currentVersion = versionInfo.CurrentVersion.ToString();
-                    SwitchToFinishState("Updates available.", $"Current version is {currentVersion}, latest version is {_latestVersion}", null);
+                    _latestVersion = versionInfo.LatestVersion;
+                    var currentVersion = versionInfo.CurrentVersion;
+                    SwitchToFinishState("Updates available.",
+                        $"Current version is {currentVersion}, latest version is {_latestVersion}", null);
                 }
                 else
                 {
@@ -197,12 +208,12 @@ namespace GeneratorAppMain.ViewModel
             }
         }
 
-        public async void DownloadFirmware()
+        public async void DownloadFirmware(string version)
         {
             SwitchToInProgressState("Updating...");
             try
             {
-                await _deviceManager.DownloadFirmware(_latestVersion, _cancellationTokenSource.Token);
+                await _deviceManager.DownloadFirmware(version, _cancellationTokenSource.Token);
                 SwitchToSuccessState("Device updated successfully.");
                 DeviceInfoMessage = $"Current version is {_latestVersion}";
             }
@@ -230,14 +241,14 @@ namespace GeneratorAppMain.ViewModel
         {
             HasError = false;
             IsFinished = true;
-            SwitchToFinishState(message, null, Properties.Resources.StatusOK_48x);
+            SwitchToFinishState(message, null, Resources.StatusOK_48x);
         }
 
         private void SwitchToErrorState(string error)
         {
             HasError = true;
             IsFinished = true;
-            SwitchToFinishState("Error", error, Properties.Resources.StatusInvalid_48x);
+            SwitchToFinishState("Error", error, Resources.StatusInvalid_48x);
         }
 
         private void SwitchToFinishState(string status, string info, Bitmap icon)

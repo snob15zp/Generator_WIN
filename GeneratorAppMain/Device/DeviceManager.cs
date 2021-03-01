@@ -1,13 +1,15 @@
-﻿using GeneratorApiLibrary;
-using GeneratorServerApi;
-using GenLib;
-using System;
+﻿using System;
+using System.Diagnostics;
 using System.IO;
 using System.IO.Compression;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Xml;
+using GeneratorApiLibrary;
+using GeneratorServerApi;
+using GenLib;
+using log4net;
 
 namespace GeneratorAppMain.Device
 {
@@ -16,6 +18,13 @@ namespace GeneratorAppMain.Device
         event EventHandler<DeviceUpdateStatusEventArgs> DeviceUpdateStatusEvent;
 
         Task<DeviceVersionInfo> CheckForUpdates(CancellationToken cancellationToken);
+
+        Task<string> GetLatestVersion();
+
+        Task<string> GetDeviceVersion(CancellationToken cancellationToken);
+
+        Task AwaitDeviceConnection(int timeout, CancellationToken cancellationToken);
+
         Task DownloadFirmware(string version, CancellationToken cancellationToken);
         Task DownloadPrograms(string url, CancellationToken cancellationToken);
     }
@@ -29,23 +38,29 @@ namespace GeneratorAppMain.Device
 
     public class DeviceUpdateStatusEventArgs
     {
-        public DeviceUpdateStatus Status { get; }
-        public int Progress { get; }
-
         public DeviceUpdateStatusEventArgs(DeviceUpdateStatus status, int progress = -1)
         {
             Status = status;
             Progress = progress;
         }
 
-        public static DeviceUpdateStatusEventArgs Updating(int current = -1, int total = 1) =>
-            new DeviceUpdateStatusEventArgs(DeviceUpdateStatus.Updating, (int)((current * 100.0) / total));
+        public DeviceUpdateStatus Status { get; }
+        public int Progress { get; }
 
-        public static DeviceUpdateStatusEventArgs Downloading() =>
-            new DeviceUpdateStatusEventArgs(DeviceUpdateStatus.Downloading);
+        public static DeviceUpdateStatusEventArgs Updating(long current = -1, long total = 1)
+        {
+            return new DeviceUpdateStatusEventArgs(DeviceUpdateStatus.Updating, (int)(current * 100.0 / total));
+        }
 
-        public static DeviceUpdateStatusEventArgs Rebooting() =>
-            new DeviceUpdateStatusEventArgs(DeviceUpdateStatus.Rebooting);
+        public static DeviceUpdateStatusEventArgs Downloading()
+        {
+            return new DeviceUpdateStatusEventArgs(DeviceUpdateStatus.Downloading);
+        }
+
+        public static DeviceUpdateStatusEventArgs Rebooting()
+        {
+            return new DeviceUpdateStatusEventArgs(DeviceUpdateStatus.Rebooting);
+        }
     }
 
     public enum DeviceUpdateStatus
@@ -58,13 +73,14 @@ namespace GeneratorAppMain.Device
 
     internal class DeviceManager : IDeviceManager
     {
-        private static readonly NLog.Logger Logger = NLog.LogManager.GetCurrentClassLogger();
-        private static readonly double BootloaderTimeout = TimeSpan.FromSeconds(180).TotalMilliseconds;
-
-        private readonly IDeviceConnectionFactory _deviceConnectionFactory;
+        private static readonly ILog Logger = LogManager.GetLogger(typeof(DeviceManager));
+        private static readonly int BootloaderTimeout = (int)TimeSpan.FromSeconds(180).TotalMilliseconds;
         private readonly IGeneratorApi _api;
 
-        public event EventHandler<DeviceUpdateStatusEventArgs> DeviceUpdateStatusEvent;
+        private readonly IDeviceConnectionFactory _deviceConnectionFactory;
+        private long _totalBytes;
+
+        private long _totalBytesSend;
 
         public DeviceManager(IDeviceConnectionFactory deviceFactory, IGeneratorApi api)
         {
@@ -72,12 +88,14 @@ namespace GeneratorAppMain.Device
             _api = api;
         }
 
+        public event EventHandler<DeviceUpdateStatusEventArgs> DeviceUpdateStatusEvent;
+
         public async Task<DeviceVersionInfo> CheckForUpdates(CancellationToken cancellationToken)
         {
             using (var device = _deviceConnectionFactory.Connect())
             {
                 var latestVersion = await GetLatestVersion();
-                var currentVersion = await Task.Run(() => device.Version, cancellationToken);
+                var currentVersion = await GetDeviceVersion(cancellationToken);
 
                 return new DeviceVersionInfo
                 {
@@ -87,17 +105,12 @@ namespace GeneratorAppMain.Device
             }
         }
 
-        private async Task<string> GetLatestVersion()
+        public async Task<string> GetDeviceVersion(CancellationToken cancellationToken)
         {
-            try
+            using (var device = _deviceConnectionFactory.Connect())
             {
-                var firmware = await _api.GetLatestVersion();
-                return firmware?.version;
-            }
-            catch (Exception e)
-            {
-                Logger.Error(e, "Unable to get the latest fimrware version");
-                throw new DeviceException(handleApiException(e));
+                if (device.Version == null) throw new DeviceNotConnectedException();
+                return await Task.Run(() => device.Version, cancellationToken);
             }
         }
 
@@ -115,12 +128,12 @@ namespace GeneratorAppMain.Device
             }
             catch (ApiException e)
             {
-                Logger.Error(e, "Unable to download firmware");
+                Logger.Error("Unable to download firmware", e);
                 throw new DeviceException(handleApiException(e));
             }
             catch (SystemException e)
             {
-                Logger.Error(e, "Unable to update device");
+                Logger.Error("Unable to update device", e);
                 throw new DeviceException("Unable to extract data");
             }
         }
@@ -143,13 +156,27 @@ namespace GeneratorAppMain.Device
             }
             catch (ApiException e)
             {
-                Logger.Error(e, "Unable to download programs");
+                Logger.Error("Unable to download programs", e);
                 throw new DeviceException(handleApiException(e));
             }
             catch (SystemException e)
             {
-                Logger.Error(e, "Unable to import programs");
+                Logger.Error("Unable to import programs", e);
                 throw new DeviceException("Unable to import programs");
+            }
+        }
+
+        public async Task<string> GetLatestVersion()
+        {
+            try
+            {
+                var firmware = await _api.GetLatestVersion();
+                return firmware?.version;
+            }
+            catch (Exception e)
+            {
+                Logger.Error("Unable to get the latest fimrware version", e);
+                throw new DeviceException(handleApiException(e));
             }
         }
 
@@ -159,61 +186,73 @@ namespace GeneratorAppMain.Device
             {
                 using (var device = _deviceConnectionFactory.Connect())
                 {
-                    device.EraseByExt(".txt");
+                    device.EraseByExt("txt");
+                    device.EraseByExt("pls");
                 }
             }, cancellationToken);
         }
 
         private async Task UpdateFirmware(string path, CancellationToken cancellationToken)
         {
-            await Task.Run(() =>
-             {
-                 DeviceUpdateStatusEvent?.Invoke(this, DeviceUpdateStatusEventArgs.Updating());
+            await Task.Run(async () =>
+            {
+                DeviceUpdateStatusEvent?.Invoke(this, DeviceUpdateStatusEventArgs.Updating());
 
-                 var files = Directory.GetFiles(path);
-                 var cpuFile = files.FirstOrDefault(fname => fname.EndsWith(".bf"));
-                 if (cpuFile != null)
-                 {
-                     ImportCpuFile(cpuFile, cancellationToken);
-                     AwaitDeviceConnection(cancellationToken);
-                 }
+                var files = Directory.GetFiles(path);
+                var cpuFile = files.FirstOrDefault(fname => fname.EndsWith(".bf"));
+                if (cpuFile != null)
+                {
+                    ImportCpuFile(cpuFile, cancellationToken);
+                    await AwaitDeviceConnection(BootloaderTimeout, cancellationToken);
+                }
 
-                 var otherFwFiles = files.Where(fname => !fname.EndsWith(".bf")).ToArray();
-                 if (otherFwFiles.Length > 0)
-                 {
-                     ImportFiles(otherFwFiles, cancellationToken, true);
-                     AwaitDeviceConnection(cancellationToken);
-                 }
-             }, cancellationToken);
+                var otherFwFiles = files.Where(fname => !fname.EndsWith(".bf")).ToArray();
+                if (otherFwFiles.Length > 0)
+                {
+                    ImportFiles(otherFwFiles, cancellationToken, true);
+                    await AwaitDeviceConnection(BootloaderTimeout, cancellationToken);
+                }
+            }, cancellationToken);
         }
 
         private void ImportFiles(string[] files, CancellationToken cancellationToken, bool isRebootNeeded)
         {
             using (var device = _deviceConnectionFactory.Connect())
             {
-                int total = files.Length;
-                if (total > 0)
-                {
-                    DeviceUpdateStatusEvent?.Invoke(this, DeviceUpdateStatusEventArgs.Updating());
-                }
-                int current = 0;
-                foreach (string file in files)
+                _totalBytes = files.Sum(FileLength);
+                if (_totalBytes == 0) return;
+                DeviceUpdateStatusEvent?.Invoke(this, DeviceUpdateStatusEventArgs.Updating());
+
+                device.OnPutFilePart += Device_OnPutFilePart;
+                _totalBytesSend = 0;
+                foreach (var file in files)
                 {
                     cancellationToken.ThrowIfCancellationRequested();
-                    var result = device.PutFile(Path.GetFileName(file), File.ReadAllBytes(file));
-                    if (result != ErrorCodes.NoError)
-                    {
-                        throw new DeviceUpdateException(result);
-                    }
-                    DeviceUpdateStatusEvent?.Invoke(this, DeviceUpdateStatusEventArgs.Updating(current++, total));
+                    var result = device.PutFile(Path.GetFileName(file), File.ReadAllBytes(file), false);
+                    if (result != ErrorCodes.NoError) throw new DeviceUpdateException(result);
+
+                    _totalBytesSend += FileLength(file);
                 }
+
+                device.OnPutFilePart -= Device_OnPutFilePart;
 
                 if (isRebootNeeded)
                 {
                     cancellationToken.ThrowIfCancellationRequested();
                     DeviceUpdateStatusEvent?.Invoke(this, DeviceUpdateStatusEventArgs.Rebooting());
-                    device.BootloaderReset();
                 }
+            }
+        }
+
+        private long FileLength(string file)
+        {
+            try
+            {
+                return new FileInfo(file).Length;
+            }
+            catch (Exception)
+            {
+                return 0L;
             }
         }
 
@@ -221,21 +260,20 @@ namespace GeneratorAppMain.Device
         {
             using (var device = _deviceConnectionFactory.Connect())
             {
-                XmlDocument doc = new XmlDocument();
+                device.BootloaderReset();
+                var doc = new XmlDocument();
                 doc.Load(file);
 
-                XmlNode chunks = doc.DocumentElement?.SelectSingleNode("chunks");
+                var chunks = doc.DocumentElement?.SelectSingleNode("chunks");
                 if (chunks == null) return;
 
-                int total = chunks.ChildNodes.Count;
-                int current = 0;
+                var total = chunks.ChildNodes.Count;
+                var current = 0;
                 foreach (XmlNode chunk in chunks)
                 {
                     cancellationToken.ThrowIfCancellationRequested();
                     if (!device.BootloaderUploadMcuFwChunk(Convert.FromBase64String(chunk.InnerText)))
-                    {
                         throw new DeviceUpdateException();
-                    }
                     DeviceUpdateStatusEvent?.Invoke(this, DeviceUpdateStatusEventArgs.Updating(current++, total));
                 }
 
@@ -244,28 +282,41 @@ namespace GeneratorAppMain.Device
             }
         }
 
-        private void AwaitDeviceConnection(CancellationToken cancellationToken)
+        private void Device_OnPutFilePart(object sender, Tuple<string, int, int> args)
         {
-            IDeviceConnection device = null;
-            for (int i = 0; i < BootloaderTimeout / 10; i++)
+            DeviceUpdateStatusEvent?.Invoke(this,
+                DeviceUpdateStatusEventArgs.Updating(_totalBytesSend + args.Item3, _totalBytes));
+        }
+
+        public Task AwaitDeviceConnection(int timeout, CancellationToken cancellationToken)
+        {
+            return Task.Run(async () =>
             {
-                Task.Delay((int)(BootloaderTimeout / 10), cancellationToken);
-                try
+                IDeviceConnection device = null;
+                for (var i = 0; i < timeout / 2000; i++)
                 {
-                    // Try to connect to device
-                    device = _deviceConnectionFactory.Connect();
-                    break;
+                    Debug.WriteLine("Try to connect");
+                    try
+                    {
+                        // Try to connect to device
+                        device = _deviceConnectionFactory.Connect();
+                        Debug.WriteLine($"Connected {device.Version}");
+                        if (device.Version != null) return;
+                    }
+                    catch (Exception)
+                    {
+                        // ignored
+                    }
+                    finally
+                    {
+                        device?.Disconnect();
+                    }
+                    await Task.Delay(2000, cancellationToken);
                 }
-                catch (Exception)
-                {
-                    // ignored
-                }
-                finally { device?.Disconnect(); }
-            }
-            if (device == null)
-            {
-                throw new DeviceNotConnectedException();
-            }
+
+                Debug.WriteLine($"Device not found");
+                if (device == null) throw new DeviceNotConnectedException();
+            });
         }
 
         private string handleApiException(Exception e)

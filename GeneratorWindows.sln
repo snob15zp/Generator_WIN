@@ -15,6 +15,8 @@ Project("{930C7802-8A8C-48F9-8165-68863BCCD9DD}") = "GeneratorBootstrapper", "Ge
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GeneratorAppManager", "GeneratorAppManager\GeneratorAppManager.csproj", "{D74C22D0-DC61-4928-9677-8B4573CD06AA}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GenUploader", "gen-uploader\GenUploader\GenUploader.csproj", "{C3041F53-6C4E-4FEA-8DD6-0EC803C9573E}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -67,6 +69,14 @@ Global
 		{D74C22D0-DC61-4928-9677-8B4573CD06AA}.Release|Any CPU.Build.0 = Release|Any CPU
 		{D74C22D0-DC61-4928-9677-8B4573CD06AA}.Release|x86.ActiveCfg = Release|Any CPU
 		{D74C22D0-DC61-4928-9677-8B4573CD06AA}.Release|x86.Build.0 = Release|Any CPU
+		{C3041F53-6C4E-4FEA-8DD6-0EC803C9573E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C3041F53-6C4E-4FEA-8DD6-0EC803C9573E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C3041F53-6C4E-4FEA-8DD6-0EC803C9573E}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{C3041F53-6C4E-4FEA-8DD6-0EC803C9573E}.Debug|x86.Build.0 = Debug|Any CPU
+		{C3041F53-6C4E-4FEA-8DD6-0EC803C9573E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C3041F53-6C4E-4FEA-8DD6-0EC803C9573E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C3041F53-6C4E-4FEA-8DD6-0EC803C9573E}.Release|x86.ActiveCfg = Release|Any CPU
+		{C3041F53-6C4E-4FEA-8DD6-0EC803C9573E}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

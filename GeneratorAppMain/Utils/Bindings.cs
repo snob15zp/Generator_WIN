@@ -1,4 +1,4 @@
-﻿
+﻿using System;
 using System.Windows.Forms;
 
 namespace GeneratorAppMain.Utils
@@ -19,12 +19,19 @@ namespace GeneratorAppMain.Utils
             return binding;
         }
 
-        public static void NegativeBooleanFormat(object sender, ConvertEventArgs e)
+        public static Binding NegativeBinding(string propertyName, object dataSource, string dataMember)
         {
-            e.Value = !((bool)e.Value);
+            var binding = new Binding(propertyName, dataSource, dataMember, true);
+            binding.Format += NegativeBooleanFormat;
+            return binding;
         }
 
-        public static void NullableToBooleanFormat(object sender, ConvertEventArgs e)
+        private static void NegativeBooleanFormat(object sender, ConvertEventArgs e)
+        {
+            e.Value = !(bool)e.Value;
+        }
+
+        private static void NullableToBooleanFormat(object sender, ConvertEventArgs e)
         {
             e.Value = e.Value != null;
         }

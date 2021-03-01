@@ -34,5 +34,17 @@ namespace GeneratorAppMain.Properties {
                 this["baseApiUrl"] = value;
             }
         }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("http://inhealion.gr")]
+        public string siteUrl {
+            get {
+                return ((string)(this["siteUrl"]));
+            }
+            set {
+                this["siteUrl"] = value;
+            }
+        }
     }
 }

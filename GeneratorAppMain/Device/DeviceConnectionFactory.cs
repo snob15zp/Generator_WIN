@@ -1,15 +1,18 @@
-﻿namespace GeneratorAppMain.Device
+﻿using System.IO;
+
+namespace GeneratorAppMain.Device
 {
-    interface IDeviceConnectionFactory
+    internal interface IDeviceConnectionFactory
     {
         IDeviceConnection Connect();
     }
 
-    class DeviceConnectionFactory : IDeviceConnectionFactory
+    internal class DeviceConnectionFactory : IDeviceConnectionFactory
     {
         public IDeviceConnection Connect()
         {
-            return new DeviceConnection();
+            var deviceConnection =  new DeviceConnection();
+            return deviceConnection;
             //return new FakeDeviceConnection();
         }
     }

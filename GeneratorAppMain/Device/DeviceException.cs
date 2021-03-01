@@ -1,9 +1,9 @@
-﻿using GenLib;
-using System;
+﻿using System;
+using GenLib;
 
 namespace GeneratorAppMain.Device
 {
-    class DeviceException : Exception
+    internal class DeviceException : Exception
     {
         public DeviceException(string message) : base(message)
         {
@@ -11,17 +11,15 @@ namespace GeneratorAppMain.Device
     }
 
 
-    class DeviceNotConnectedException : DeviceException
+    internal class DeviceNotConnectedException : DeviceException
     {
         public DeviceNotConnectedException() : base("Device is not connected")
         {
         }
     }
 
-    class DeviceUpdateException : DeviceException
+    internal class DeviceUpdateException : DeviceException
     {
-        public ErrorCodes ErrorCode { get; }
-
         public DeviceUpdateException() : base("Unable to update device")
         {
         }
@@ -29,7 +27,9 @@ namespace GeneratorAppMain.Device
 
         public DeviceUpdateException(ErrorCodes errorCode) : base("Unable to update device")
         {
-            this.ErrorCode = errorCode;
+            ErrorCode = errorCode;
         }
+
+        public ErrorCodes ErrorCode { get; }
     }
 }

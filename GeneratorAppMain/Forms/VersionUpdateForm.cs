@@ -1,22 +1,23 @@
-﻿using GeneratorAppMain.Utils;
-using GeneratorAppMain.ViewModel;
-using System;
+﻿using System;
 using System.Windows.Forms;
+using GeneratorAppMain.Utils;
+using GeneratorAppMain.ViewModel;
 
 namespace GeneratorAppMain.Forms
 {
     public partial class VersionUpdateForm : Form
     {
         private readonly ProgressFormViewModel _progressFormViewModel;
+        private readonly string _version;
 
-        public VersionUpdateForm()
+        public VersionUpdateForm(string version = null)
         {
             InitializeComponent();
 
+            _version = version;
             _progressFormViewModel = new ProgressFormViewModel(this);
-            SetupBindings();
 
-            _progressFormViewModel.CheckForUpdates(true);
+            SetupBindings();
         }
 
         private void SetupBindings()
@@ -43,7 +44,7 @@ namespace GeneratorAppMain.Forms
 
         private void updateButton_Click(object sender, EventArgs args)
         {
-            _progressFormViewModel.DownloadFirmware();
+            _progressFormViewModel.DownloadFirmware(_progressFormViewModel.Version);
         }
 
         private void VersionUpdateForm_FormClosed(object sender, FormClosedEventArgs e)
@@ -54,6 +55,19 @@ namespace GeneratorAppMain.Forms
         private void okButton_Click(object sender, EventArgs e)
         {
             Dispose();
+        }
+
+        private void VersionUpdateForm_Load(object sender, EventArgs e)
+        {
+            if (_version != null)
+            {
+                _progressFormViewModel.DownloadFirmware(_version);
+            }
+            else
+            {
+                _progressFormViewModel.CheckForUpdates(true);
+            }
+
         }
     }
 }

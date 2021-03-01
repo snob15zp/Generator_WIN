@@ -11,7 +11,6 @@ namespace GeneratorAppMain.Messages
 
     public class MessageHandler : IMessageHandler
     {
-
         public event EventHandler<string> MessageReceived;
 
         public void Handle(string message)
