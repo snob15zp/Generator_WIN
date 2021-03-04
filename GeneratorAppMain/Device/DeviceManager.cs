@@ -229,7 +229,11 @@ namespace GeneratorAppMain.Device
                 {
                     cancellationToken.ThrowIfCancellationRequested();
                     var result = device.PutFile(Path.GetFileName(file), File.ReadAllBytes(file), false);
-                    if (result != ErrorCodes.NoError) throw new DeviceUpdateException(result);
+                    if (result != ErrorCodes.NoError)
+                    {
+                        Logger.Error($"Put file {file} error: {result}");
+                        throw new DeviceUpdateException(result);
+                    }
 
                     _totalBytesSend += FileLength(file);
                 }
