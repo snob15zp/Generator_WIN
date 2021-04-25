@@ -52,7 +52,7 @@
             this.controlPanel.Controls.Add(this.updateButton);
             this.controlPanel.Dock = System.Windows.Forms.DockStyle.Bottom;
             this.controlPanel.FlowDirection = System.Windows.Forms.FlowDirection.RightToLeft;
-            this.controlPanel.Location = new System.Drawing.Point(0, 115);
+            this.controlPanel.Location = new System.Drawing.Point(0, 90);
             this.controlPanel.Name = "controlPanel";
             this.controlPanel.Padding = new System.Windows.Forms.Padding(0, 8, 16, 8);
             this.controlPanel.Size = new System.Drawing.Size(481, 56);
@@ -125,7 +125,7 @@
             this.resultPictureBox.Location = new System.Drawing.Point(16, 16);
             this.resultPictureBox.Margin = new System.Windows.Forms.Padding(0);
             this.resultPictureBox.Name = "resultPictureBox";
-            this.resultPictureBox.Size = new System.Drawing.Size(48, 99);
+            this.resultPictureBox.Size = new System.Drawing.Size(48, 74);
             this.resultPictureBox.SizeMode = System.Windows.Forms.PictureBoxSizeMode.AutoSize;
             this.resultPictureBox.TabIndex = 4;
             this.resultPictureBox.TabStop = false;
@@ -144,7 +144,7 @@
             this.tableLayoutPanel.Padding = new System.Windows.Forms.Padding(16, 16, 16, 0);
             this.tableLayoutPanel.RowCount = 1;
             this.tableLayoutPanel.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 100F));
-            this.tableLayoutPanel.Size = new System.Drawing.Size(481, 115);
+            this.tableLayoutPanel.Size = new System.Drawing.Size(481, 90);
             this.tableLayoutPanel.TabIndex = 5;
             // 
             // tableLayoutPanel1
@@ -163,22 +163,24 @@
             this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle());
             this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle());
             this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle());
-            this.tableLayoutPanel1.Size = new System.Drawing.Size(395, 93);
+            this.tableLayoutPanel1.Size = new System.Drawing.Size(395, 68);
             this.tableLayoutPanel1.TabIndex = 5;
             // 
             // VersionUpdateForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 16F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(481, 171);
+            this.ClientSize = new System.Drawing.Size(481, 146);
+            this.ControlBox = false;
             this.Controls.Add(this.tableLayoutPanel);
             this.Controls.Add(this.controlPanel);
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedDialog;
+            this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
             this.MaximizeBox = false;
             this.Name = "VersionUpdateForm";
-            this.ShowIcon = false;
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
             this.Text = "Check For Updates";
+            this.TopMost = true;
             this.FormClosed += new System.Windows.Forms.FormClosedEventHandler(this.VersionUpdateForm_FormClosed);
             this.Load += new System.EventHandler(this.VersionUpdateForm_Load);
             this.controlPanel.ResumeLayout(false);

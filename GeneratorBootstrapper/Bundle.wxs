@@ -1,9 +1,15 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Wix xmlns="http://schemas.microsoft.com/wix/2006/wi"
      xmlns:bal="http://schemas.microsoft.com/wix/BalExtension"
+     xmlns:util="http://schemas.microsoft.com/wix/UtilExtension"
      xmlns:netfx="http://schemas.microsoft.com/wix/NetFxExtension">
-  <Bundle Name="Generator" Version="1.0.1" Manufacturer="Inhealion" UpgradeCode="EDFF86BB-569F-4D15-8148-18FEE3AA8987">
-    <RelatedBundle Id="EDFF86BB-569F-4D15-8148-18FEE3AA8987" Action="Upgrade"/>
+
+  <?include ../GeneratorSetup/Global.wxi?>
+
+  <Bundle Name="$(var.ProductName)"
+          Version="!(bind.packageVersion.GeneratorMsi)"
+          Manufacturer="$(var.Manufacturer)"
+          UpgradeCode="461A9CA0-1868-4F37-B19B-204EF5819FB9">
 
     <BootstrapperApplicationRef Id="WixStandardBootstrapperApplication.HyperlinkLicense" >
       <bal:WixStandardBootstrapperApplication
@@ -12,10 +18,22 @@
         LogoFile="setup_64x64.png"
         LocalizationFile="HyperlinkTheme.wxl" />
     </BootstrapperApplicationRef>
-    
+
+    <OptionalUpdateRegistration />
+
     <Chain>
       <PackageGroupRef Id="NetFx461Redist"/>
-      <MsiPackage Id="Generator" SourceFile="$(var.GeneratorSetup.TargetPath)"/>
+      
+      <ExePackage
+        Id="FtdiDriver"
+        SourceFile="CDM21228_Setup.exe"
+        DisplayName="FTDI CMD Driver"
+        Vital="no" />
+
+      <MsiPackage
+        Id="GeneratorMsi"
+        SourceFile="$(var.GeneratorSetup.TargetPath)"
+        ForcePerMachine="yes" />
     </Chain>
   </Bundle>
 </Wix>

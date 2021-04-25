@@ -114,6 +114,7 @@ namespace GeneratorAppMain.Forms
             this.Name = "InputForm";
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
             this.Text = "Input";
+            this.TopMost = true;
             this.controlPanel.ResumeLayout(false);
             this.ResumeLayout(false);
             this.PerformLayout();

@@ -2,10 +2,17 @@
 <Wix xmlns="http://schemas.microsoft.com/wix/2006/wi"
      xmlns:util="http://schemas.microsoft.com/wix/UtilExtension">
 
-  <Product Id="*" Name="Generator" Language="1033" Version="1.0.0.0" Manufacturer="Inhealion" UpgradeCode="E8FCD8E5-63B3-45C3-A995-B96573BF3205">
-    <Package InstallerVersion="200" Compressed="yes" InstallScope="perMachine" />
-    <Upgrade Id="E8FCD8E5-63B3-45C3-A995-B96573BF3205"/>
+  <?include Global.wxi ?>
 
+  <Product Id="*"
+           Language="1033"
+           Name="$(var.ProductName)"
+           Version="!(bind.FileVersion.GeneratorAppMainFile)"
+           Manufacturer="$(var.Manufacturer)"
+           UpgradeCode="$(var.UpgradeCode)">
+
+    <Package InstallerVersion="450" Compressed="yes" InstallScope="perMachine" />
+    <Upgrade Id="$(var.UpgradeCode)"/>
     <MediaTemplate />
 
     <Feature Id="ProductFeature" Title="GeneratorSetup" Level="1">
@@ -14,8 +21,55 @@
     </Feature>
 
     <InstallExecuteSequence>
-      <RemoveExistingProducts After="InstallInitialize" /> 
+      <RemoveExistingProducts After="InstallInitialize" />
     </InstallExecuteSequence>
+
+    <!--<UI Id="WixUI_Minimal">
+      <TextStyle Id="WixUI_Font_Normal" FaceName="Tahoma" Size="8" />
+      <TextStyle Id="WixUI_Font_Bigger" FaceName="Tahoma" Size="12" />
+      <TextStyle Id="WixUI_Font_Title" FaceName="Tahoma" Size="9" Bold="yes" />
+
+      <Property Id="DefaultUIFont" Value="WixUI_Font_Normal" />
+      <Property Id="WixUI_Mode" Value="Minimal" />
+
+      <DialogRef Id="ErrorDlg" />
+      <DialogRef Id="FatalError" />
+      <DialogRef Id="FilesInUse" />
+      <DialogRef Id="MsiRMFilesInUse" />
+      <DialogRef Id="PrepareDlg" />
+      <DialogRef Id="ProgressDlg" />
+      <DialogRef Id="ResumeDlg" />
+      <DialogRef Id="UserExit" />
+
+      --><!-- This is the welcome dialog you specified--><!--
+      <DialogRef Id="WelcomeDlg" />
+
+      --><!-- Hook the new welcome dialog to the next one in the stack--><!--
+      <Publish Dialog="WelcomeDlg" Control="Next" Event="NewDialog" Value="SetupTypeDlg">1</Publish>
+
+      <Publish Dialog="SetupTypeDlg" Control="Back" Event="NewDialog" Value="WelcomeDlg">1</Publish>
+      <Publish Dialog="SetupTypeDlg" Control="TypicalButton" Event="NewDialog" Value="VerifyReadyDlg">1</Publish>
+      <Publish Dialog="SetupTypeDlg" Control="CustomButton" Event="NewDialog" Value="CustomizeDlg">1</Publish>
+      <Publish Dialog="SetupTypeDlg" Control="CompleteButton" Event="NewDialog" Value="VerifyReadyDlg">1</Publish>
+
+      <Publish Dialog="CustomizeDlg" Control="Back" Event="NewDialog" Value="MaintenanceTypeDlg" Order="1">WixUI_InstallMode = "Change"</Publish>
+      <Publish Dialog="CustomizeDlg" Control="Back" Event="NewDialog" Value="SetupTypeDlg" Order="2">WixUI_InstallMode = "InstallCustom"</Publish>
+      <Publish Dialog="CustomizeDlg" Control="Next" Event="NewDialog" Value="VerifyReadyDlg">1</Publish>
+
+      <Publish Dialog="ExitDialog" Control="Finish" Event="EndDialog" Value="Return" Order="999">1</Publish>
+
+      <Publish Dialog="VerifyReadyDlg" Control="Back" Event="NewDialog" Value="MaintenanceTypeDlg">1</Publish>
+
+      <Publish Dialog="MaintenanceWelcomeDlg" Control="Next" Event="NewDialog" Value="MaintenanceTypeDlg">1</Publish>
+
+      <Publish Dialog="MaintenanceTypeDlg" Control="RepairButton" Event="NewDialog" Value="VerifyReadyDlg">1</Publish>
+      <Publish Dialog="MaintenanceTypeDlg" Control="RemoveButton" Event="NewDialog" Value="VerifyReadyDlg">1</Publish>
+      <Publish Dialog="MaintenanceTypeDlg" Control="Back" Event="NewDialog" Value="MaintenanceWelcomeDlg">1</Publish>
+
+      <Property Id="ARPNOMODIFY" Value="1" />
+    </UI>
+    <UIRef Id="WixUI_Common" />-->
+
   </Product>
 
   <Fragment>
@@ -43,8 +97,13 @@
   <Fragment>
     <ComponentGroup Id="ProductComponents" Directory="INSTALLFOLDER">
       <Component Id="ProductComponent" Guid="787BED68-E057-4769-8D3C-A211ED60E0C6">
-        <File Source="$(var.GeneratorAppMain.TargetPath)">
-          <Shortcut Id="DesktopShortcut" Directory="DesktopFolder" Name="Generator" WorkingDirectory="INSTALLFOLDER" Advertise="yes" Icon="favicon.exe" />
+        <File Id="GeneratorAppMainFile" Source="$(var.GeneratorAppMain.TargetPath)">
+          <Shortcut Id="DesktopShortcut"
+                    Directory="DesktopFolder"
+                    Name="$(var.Manufacturer)"
+                    WorkingDirectory="INSTALLFOLDER"
+                    Advertise="yes"
+                    Icon="favicon.exe" />
         </File>
         <File Source="$(var.GeneratorAppManager.TargetPath)"/>
         <File Source="$(var.GeneratorServerApi.TargetPath)"/>
@@ -74,6 +133,7 @@
         <File Source="$(var.GeneratorAppMain.TargetDir)Unity.Abstractions.dll" />
         <File Source="$(var.GeneratorAppMain.TargetDir)Unity.Container.dll" />
         <File Source="$(var.GeneratorAppMain.TargetDir)RestSharp.dll" />
+        <File Source="$(var.GeneratorAppMain.TargetDir)NLog.dll" />
         <File Source="$(var.GeneratorAppMain.TargetDir)log4net.dll" />
 
         <File Source="$(var.GeneratorAppMain.TargetDir)System.Diagnostics.DiagnosticSource.dll" />

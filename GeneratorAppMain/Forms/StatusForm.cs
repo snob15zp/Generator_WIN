@@ -1,6 +1,7 @@
 ﻿using GeneratorAppMain.Utils;
 using GeneratorAppMain.ViewModel;
 using System;
+using System.Reflection;
 using System.Windows.Forms;
 
 namespace GeneratorAppMain.Forms
@@ -31,6 +32,7 @@ namespace GeneratorAppMain.Forms
 
             refreshButton.DataBindings.Add(Bindings.NegativeBinding("Enabled", _statusFormViewModel, "InProgress"));
             installButton.DataBindings.Add(Bindings.NegativeBinding("Enabled", _statusFormViewModel, "InProgress"));
+            installButton.DataBindings.Add(new Binding("Visible", _statusFormViewModel, "IsUpdateRequired"));
 
             DataBindings.Add(new Binding("Text", _statusFormViewModel, "DeviceStatusMessage"));
         }

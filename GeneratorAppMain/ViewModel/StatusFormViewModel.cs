@@ -3,6 +3,7 @@ using System.ComponentModel;
 using System.Threading;
 using System.Threading.Tasks;
 using GeneratorAppMain.Device;
+using GeneratorAppMain.Utils;
 using log4net;
 
 namespace GeneratorAppMain.ViewModel
@@ -27,6 +28,8 @@ namespace GeneratorAppMain.ViewModel
 
         private string _latestVersionMessage;
 
+        private bool _isUpdateRequired;
+
         public string DeviceStatusMessage
         {
             get => _deviceStatusMessage;
@@ -44,6 +47,16 @@ namespace GeneratorAppMain.ViewModel
             {
                 _isDeviceConnected = value;
                 NotifyPropertyChanged("IsDeviceConnected");
+            }
+        }
+
+        public bool IsUpdateRequired
+        {
+            get => _isUpdateRequired;
+            private set
+            {
+                _isUpdateRequired = value;
+                NotifyPropertyChanged("IsUpdateRequired");
             }
         }
 
@@ -122,7 +135,7 @@ namespace GeneratorAppMain.ViewModel
                 try
                 {
                     Version = await _deviceManager.GetLatestVersion();
-                    LatestVersionMessage = $"Latest firmware version: {Version}";
+                    LatestVersionMessage = $"Latest firmware version: {Strings.NormalizeVersion(Version)}";
                 }
                 catch (Exception)
                 {
@@ -132,10 +145,12 @@ namespace GeneratorAppMain.ViewModel
 
                 try
                 {
-                    var deviceVersion = await _deviceManager.GetDeviceVersion(_cancellationTokenSource.Token);
+                    var deviceVersion = await _deviceManager.GetDeviceVersion();
                     IsDeviceConnected = true;
                     DeviceStatusMessage = "Device Status - Connected";
-                    DeviceVersionMessage = $"Device firmware version: {deviceVersion}";
+                    DeviceVersionMessage = $"Device firmware version: {Strings.NormalizeVersion(deviceVersion)}";
+
+                    IsUpdateRequired = new Version(deviceVersion).CompareTo(new Version(Version)) != 0;
                 }
                 catch (Exception)
                 {

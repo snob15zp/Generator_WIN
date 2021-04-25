@@ -32,6 +32,7 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
+    <Content Include="CDM21228_Setup.exe" />
     <Content Include="setup_64x64.png" />
     <Content Include="HyperlinkTheme.xml" />
   </ItemGroup>
@@ -39,6 +40,10 @@
     <EmbeddedResource Include="HyperlinkTheme.wxl" />
   </ItemGroup>
   <ItemGroup>
+    <WixExtension Include="WixUtilExtension">
+      <HintPath>libs\WixUtilExtension.dll</HintPath>
+      <Name>WixUtilExtension</Name>
+    </WixExtension>
     <WixExtension Include="WixNetFxExtension">
       <HintPath>libs\WixNetFxExtension.dll</HintPath>
       <Name>WixNetFxExtension</Name>

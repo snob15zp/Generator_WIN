@@ -6,6 +6,10 @@ using System.Linq;
 using GeneratorAppMain.Messages;
 using log4net;
 using log4net.Config;
+using GenLib;
+using System.IO;
+using System.Diagnostics;
+using System.Text;
 
 namespace GeneratorAppMain
 {

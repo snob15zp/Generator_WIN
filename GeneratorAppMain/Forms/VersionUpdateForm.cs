@@ -34,7 +34,7 @@ namespace GeneratorAppMain.Forms
             resultPictureBox.DataBindings.Add(Bindings.VisibleNullableBinding(_progressFormViewModel, "Icon"));
             resultPictureBox.DataBindings.Add(new Binding("Image", _progressFormViewModel, "Icon", true));
 
-            cancelButton.DataBindings.Add(Bindings.NegativeVisibleBinding(_progressFormViewModel, "IsFinished"));
+            cancelButton.DataBindings.Add(Bindings.NegativeVisibleBinding(_progressFormViewModel, "InProgress"));
         }
 
         private void cancelButton_Click(object sender, EventArgs e)
@@ -65,9 +65,8 @@ namespace GeneratorAppMain.Forms
             }
             else
             {
-                _progressFormViewModel.CheckForUpdates(true);
+                _progressFormViewModel.CheckForUpdates();
             }
-
         }
     }
 }

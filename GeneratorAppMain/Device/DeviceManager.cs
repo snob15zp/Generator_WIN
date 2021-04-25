@@ -3,6 +3,7 @@ using System.Diagnostics;
 using System.IO;
 using System.IO.Compression;
 using System.Linq;
+using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Xml;
@@ -17,16 +18,17 @@ namespace GeneratorAppMain.Device
     {
         event EventHandler<DeviceUpdateStatusEventArgs> DeviceUpdateStatusEvent;
 
-        Task<DeviceVersionInfo> CheckForUpdates(CancellationToken cancellationToken);
+        Task<DeviceVersionInfo> CheckForUpdates();
 
         Task<string> GetLatestVersion();
 
-        Task<string> GetDeviceVersion(CancellationToken cancellationToken);
+        Task<string> GetDeviceVersion();
 
-        Task AwaitDeviceConnection(int timeout, CancellationToken cancellationToken);
+        Task AwaitDeviceConnection(int timeout);
 
-        Task DownloadFirmware(string version, CancellationToken cancellationToken);
-        Task DownloadPrograms(string url, CancellationToken cancellationToken);
+        Task DownloadFirmware(string version);
+        Task DownloadPrograms(string url);
+        void Cancel();
     }
 
     public class DeviceVersionInfo
@@ -75,12 +77,15 @@ namespace GeneratorAppMain.Device
     {
         private static readonly ILog Logger = LogManager.GetLogger(typeof(DeviceManager));
         private static readonly int BootloaderTimeout = (int)TimeSpan.FromSeconds(180).TotalMilliseconds;
+
         private readonly IGeneratorApi _api;
 
         private readonly IDeviceConnectionFactory _deviceConnectionFactory;
         private long _totalBytes;
 
         private long _totalBytesSend;
+
+        private IDeviceConnection _device;
 
         public DeviceManager(IDeviceConnectionFactory deviceFactory, IGeneratorApi api)
         {
@@ -90,12 +95,12 @@ namespace GeneratorAppMain.Device
 
         public event EventHandler<DeviceUpdateStatusEventArgs> DeviceUpdateStatusEvent;
 
-        public async Task<DeviceVersionInfo> CheckForUpdates(CancellationToken cancellationToken)
+        public async Task<DeviceVersionInfo> CheckForUpdates()
         {
             using (var device = _deviceConnectionFactory.Connect())
             {
                 var latestVersion = await GetLatestVersion();
-                var currentVersion = await GetDeviceVersion(cancellationToken);
+                var currentVersion = await GetDeviceVersion();
 
                 return new DeviceVersionInfo
                 {
@@ -105,26 +110,29 @@ namespace GeneratorAppMain.Device
             }
         }
 
-        public async Task<string> GetDeviceVersion(CancellationToken cancellationToken)
+        public async Task<string> GetDeviceVersion()
         {
-            using (var device = _deviceConnectionFactory.Connect())
+            return await Task.Run(() =>
             {
-                if (device.Version == null) throw new DeviceNotConnectedException();
-                return await Task.Run(() => device.Version, cancellationToken);
-            }
+                using (var device = _deviceConnectionFactory.Connect())
+                {
+                    if (device.Version == null) throw new DeviceNotConnectedException();
+                    return device.Version;
+                }
+            });
         }
 
-        public async Task DownloadFirmware(string version, CancellationToken cancellationToken)
+        public async Task DownloadFirmware(string version)
         {
             DeviceUpdateStatusEvent?.Invoke(this, DeviceUpdateStatusEventArgs.Downloading());
             var tempFileName = Path.GetTempFileName();
             try
             {
-                await _api.DonwloadFirmware(version, tempFileName, cancellationToken);
+                await _api.DonwloadFirmware(version, tempFileName, CancellationToken.None);
 
                 var tempPath = Path.GetTempPath() + Path.GetRandomFileName();
-                await Task.Run(() => ZipFile.ExtractToDirectory(tempFileName, tempPath), cancellationToken);
-                await UpdateFirmware(tempPath, cancellationToken);
+                await Task.Run(() => ZipFile.ExtractToDirectory(tempFileName, tempPath));
+                await UpdateFirmware(tempPath);
             }
             catch (ApiException e)
             {
@@ -138,21 +146,31 @@ namespace GeneratorAppMain.Device
             }
         }
 
-        public async Task DownloadPrograms(string url, CancellationToken cancellationToken)
+        public async Task DownloadPrograms(string url)
         {
+            var parts = url.TrimStart('/').Split('/');
+            if(parts.Length < 4)
+            {
+                throw new DeviceException("Malformed download url");
+            }
             DeviceUpdateStatusEvent?.Invoke(this, DeviceUpdateStatusEventArgs.Downloading());
             var tempFileName = Path.GetTempFileName();
             try
             {
-                await _api.DownloadPrograms(url, tempFileName, cancellationToken);
+                var folder = await _api.GetFolder(parts[1], parts[3]);
+                await _api.DownloadPrograms(url, tempFileName, CancellationToken.None);
+                await Task.Run(() =>
+                {
+                    var tempPath = Path.GetTempPath() + Path.GetRandomFileName();
+                    ZipFile.ExtractToDirectory(tempFileName, tempPath);
 
-                var tempPath = Path.GetTempPath() + Path.GetRandomFileName();
-                await Task.Run(() => ZipFile.ExtractToDirectory(tempFileName, tempPath), cancellationToken);
-
-                await ClearAllPrograms(cancellationToken);
-
-                var files = Directory.GetFiles(tempPath).OrderByDescending(Path.GetExtension).ToArray();
-                await Task.Run(() => ImportFiles(files, cancellationToken, false), cancellationToken);
+                    var files = Directory.GetFiles(tempPath).Where(fname => fname.EndsWith(".txt")).ToArray();
+                    ImportFiles(files, false, folder.IsEncrypted);
+                });
+            }
+            catch (OperationCanceledException e)
+            {
+                Console.WriteLine($"{nameof(OperationCanceledException)} thrown with message: {e.Message}");
             }
             catch (ApiException e)
             {
@@ -171,7 +189,7 @@ namespace GeneratorAppMain.Device
             try
             {
                 var firmware = await _api.GetLatestVersion();
-                return firmware?.version;
+                return firmware?.Version;
             }
             catch (Exception e)
             {
@@ -180,19 +198,22 @@ namespace GeneratorAppMain.Device
             }
         }
 
-        private async Task ClearAllPrograms(CancellationToken cancellationToken)
+        public void Cancel()
         {
-            await Task.Run(() =>
+            if (_device != null && _device.Ready)
             {
-                using (var device = _deviceConnectionFactory.Connect())
+                try
                 {
-                    device.EraseByExt("txt");
-                    device.EraseByExt("pls");
+                    _device.Disconnect();
                 }
-            }, cancellationToken);
+                catch (Exception)
+                {
+                    // Ignore
+                }
+            }
         }
 
-        private async Task UpdateFirmware(string path, CancellationToken cancellationToken)
+        private async Task UpdateFirmware(string path)
         {
             await Task.Run(async () =>
             {
@@ -202,47 +223,69 @@ namespace GeneratorAppMain.Device
                 var cpuFile = files.FirstOrDefault(fname => fname.EndsWith(".bf"));
                 if (cpuFile != null)
                 {
-                    ImportCpuFile(cpuFile, cancellationToken);
-                    await AwaitDeviceConnection(BootloaderTimeout, cancellationToken);
+                    ImportCpuFile(cpuFile);
+                    await AwaitDeviceConnection(BootloaderTimeout);
                 }
 
                 var otherFwFiles = files.Where(fname => !fname.EndsWith(".bf")).ToArray();
                 if (otherFwFiles.Length > 0)
                 {
-                    ImportFiles(otherFwFiles, cancellationToken, true);
-                    await AwaitDeviceConnection(BootloaderTimeout, cancellationToken);
+                    ImportFiles(otherFwFiles, true);
+                    await AwaitDeviceConnection(BootloaderTimeout);
                 }
-            }, cancellationToken);
+            });
         }
 
-        private void ImportFiles(string[] files, CancellationToken cancellationToken, bool isRebootNeeded)
+        private void ImportFiles(string[] files, bool isRebootNeeded, bool isEncrypted = false)
         {
-            using (var device = _deviceConnectionFactory.Connect())
+            using (_device = _deviceConnectionFactory.Connect())
             {
-                _totalBytes = files.Sum(FileLength);
+                _device.EraseByExt("txt");
+                _device.EraseByExt("pls");
+
+                var programFiles = files.Where(fname => fname.EndsWith(".txt")).Select(file => Path.GetFileName(file)).OrderBy(f => f);
+                var fileList = programFiles.SelectMany(s =>
+                {
+                    var bytes = Encoding.UTF8.GetBytes(Path.GetFileNameWithoutExtension(LFOV.TruncateFileName(s))).ToList();
+                    bytes.AddRange(Enumerable.Repeat((byte)0x20, GenG070V1.MaxFilenameSz - bytes.Count));
+                    return bytes.ToArray();
+                }).ToArray();
+
+                _totalBytes = files.Sum(FileLength) + fileList.Length;
                 if (_totalBytes == 0) return;
                 DeviceUpdateStatusEvent?.Invoke(this, DeviceUpdateStatusEventArgs.Updating());
 
-                device.OnPutFilePart += Device_OnPutFilePart;
+                _device.OnPutFilePart += Device_OnPutFilePart;
                 _totalBytesSend = 0;
+                var idx = 1;
                 foreach (var file in files)
                 {
-                    cancellationToken.ThrowIfCancellationRequested();
-                    var result = device.PutFile(Path.GetFileName(file), File.ReadAllBytes(file), false);
+                    var result = _device.PutFile($"{idx}.txt", File.ReadAllBytes(file), false, isEncrypted);
                     if (result != ErrorCodes.NoError)
                     {
                         Logger.Error($"Put file {file} error: {result}");
                         throw new DeviceUpdateException(result);
                     }
-
+                    idx++;
                     _totalBytesSend += FileLength(file);
                 }
 
-                device.OnPutFilePart -= Device_OnPutFilePart;
+                if (programFiles.Count() > 0)
+                {
+                    var result = _device.PutFile("freq.pls", fileList, false, false);
+
+                    if (result != ErrorCodes.NoError)
+                    {
+                        Logger.Error($"Put file freq.pls error: {result}");
+                        throw new DeviceUpdateException(result);
+                    }
+                }
+
+                _device.TransmitDone();
+                _device.OnPutFilePart -= Device_OnPutFilePart;
 
                 if (isRebootNeeded)
                 {
-                    cancellationToken.ThrowIfCancellationRequested();
                     DeviceUpdateStatusEvent?.Invoke(this, DeviceUpdateStatusEventArgs.Rebooting());
                 }
             }
@@ -260,11 +303,12 @@ namespace GeneratorAppMain.Device
             }
         }
 
-        private void ImportCpuFile(string file, CancellationToken cancellationToken)
+        private void ImportCpuFile(string file)
         {
-            using (var device = _deviceConnectionFactory.Connect())
+            using (_device = _deviceConnectionFactory.Connect())
             {
-                device.BootloaderReset();
+
+                _device.BootloaderReset();
                 var doc = new XmlDocument();
                 doc.Load(file);
 
@@ -275,14 +319,30 @@ namespace GeneratorAppMain.Device
                 var current = 0;
                 foreach (XmlNode chunk in chunks)
                 {
-                    cancellationToken.ThrowIfCancellationRequested();
-                    if (!device.BootloaderUploadMcuFwChunk(Convert.FromBase64String(chunk.InnerText)))
+                    if (!_device.BootloaderUploadMcuFwChunk(Convert.FromBase64String(chunk.InnerText)))
                         throw new DeviceUpdateException();
                     DeviceUpdateStatusEvent?.Invoke(this, DeviceUpdateStatusEventArgs.Updating(current++, total));
                 }
 
+                string VerStr = doc.DocumentElement.SelectSingleNode("fw").SelectSingleNode("version").InnerText;
+
+                Version ver = new Version(DateTime.Now.Year - 2000, DateTime.Now.Month, DateTime.Now.Day);
+
+                if (VerStr[0] != 'R')
+                {
+                    Version.TryParse(VerStr, out ver);
+                }
+                else
+                {
+                    if (int.TryParse(VerStr.Substring(1, 2), out int Major) && int.TryParse(VerStr.Substring(3, 2), out int Minor) && int.TryParse(VerStr.Substring(5, 2), out int Build))
+                    {
+                        ver = new Version(Major, Minor, Build);
+                    }
+                }
+                _device.BootloaderSetVersion(ver);
+
                 DeviceUpdateStatusEvent?.Invoke(this, DeviceUpdateStatusEventArgs.Rebooting());
-                device.BootloaderRunMcuFw();
+                _device.BootloaderRunMcuFw();
             }
         }
 
@@ -292,7 +352,7 @@ namespace GeneratorAppMain.Device
                 DeviceUpdateStatusEventArgs.Updating(_totalBytesSend + args.Item3, _totalBytes));
         }
 
-        public Task AwaitDeviceConnection(int timeout, CancellationToken cancellationToken)
+        public Task AwaitDeviceConnection(int timeout)
         {
             return Task.Run(async () =>
             {
@@ -315,7 +375,7 @@ namespace GeneratorAppMain.Device
                     {
                         device?.Disconnect();
                     }
-                    await Task.Delay(2000, cancellationToken);
+                    await Task.Delay(2000);
                 }
 
                 Debug.WriteLine($"Device not found");

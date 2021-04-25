@@ -13,6 +13,8 @@ namespace GeneratorAppMain.Forms
         {
             InitializeComponent();
 
+            cancelButton.Visible = false;
+
             _progressFormViewModel = new ProgressFormViewModel(this);
             SetupBindings();
             _progressFormViewModel.DownloadPrograms(url);
@@ -26,12 +28,12 @@ namespace GeneratorAppMain.Forms
             infoLabel.DataBindings.Add(Bindings.VisibleNullableBinding(_progressFormViewModel, "DeviceInfoMessage"));
 
             progressBar.DataBindings.Add(new Binding("Visible", _progressFormViewModel, "InProgress"));
-            okButton.DataBindings.Add(new Binding("Visible", _progressFormViewModel, "IsFinished"));
+            okButton.DataBindings.Add(new Binding("Enabled", _progressFormViewModel, "IsFinished"));
 
             resultPictureBox.DataBindings.Add(Bindings.VisibleNullableBinding(_progressFormViewModel, "Icon"));
             resultPictureBox.DataBindings.Add(new Binding("Image", _progressFormViewModel, "Icon", true));
 
-            cancelButton.DataBindings.Add(Bindings.NegativeVisibleBinding(_progressFormViewModel, "IsFinished"));
+            //cancelButton.DataBindings.Add(Bindings.NegativeVisibleBinding(_progressFormViewModel, "IsFinished"));
         }
 
         private void cancelButton_Click(object sender, EventArgs e)
@@ -47,6 +49,14 @@ namespace GeneratorAppMain.Forms
         private void okButton_Click(object sender, EventArgs e)
         {
             Dispose();
+        }
+
+        private void DownloadForm_Shown(object sender, EventArgs e)
+        {
+            TopMost = true;
+            Activate();
+            BringToFront();
+            TopMost = false;
         }
     }
 }

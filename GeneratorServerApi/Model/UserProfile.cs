@@ -4,14 +4,14 @@ namespace GeneratorApiLibrary.Model
 {
     public class UserProfile
     {
-        public string id { get; set; }
-        public string name { get; set; }
-        public string surname { get; set; }
-        public string phoneNumber { get; set; }
-        public string address { get; set; }
-        public DateTime dateOfBirth { get; set; }
-        public string email { get; set; }
-        public DateTime createdAt { get; set; }
-        public DateTime updatedAt { get; set; }
+        public string Id { get; set; }
+        public string Name { get; set; }
+        public string Surname { get; set; }
+        public string PhoneNumber { get; set; }
+        public string Address { get; set; }
+        public DateTime DateOfBirth { get; set; }
+        public string Email { get; set; }
+        public DateTime CreatedAt { get; set; }
+        public DateTime UpdatedAt { get; set; }
     }
 }

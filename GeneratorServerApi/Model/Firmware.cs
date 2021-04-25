@@ -5,11 +5,11 @@ namespace GeneratorServerApi.Model
 {
     public class Firmware
     {
-        public string id { get; set; }
-        public string version { get; set; }
-        public Boolean active { get; set; }
-        public DateTime createdAt { get; set; }
-        public List<FirmwareFile> files { get; set; }
+        public string Id { get; set; }
+        public string Version { get; set; }
+        public Boolean Active { get; set; }
+        public DateTime CreatedAt { get; set; }
+        public List<FirmwareFile> Files { get; set; }
 
     }
 }

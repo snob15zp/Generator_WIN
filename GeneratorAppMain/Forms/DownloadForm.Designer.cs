@@ -28,6 +28,7 @@
         /// </summary>
         private void InitializeComponent()
         {
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(DownloadForm));
             this.tableLayoutPanel = new System.Windows.Forms.TableLayoutPanel();
             this.resultPictureBox = new System.Windows.Forms.PictureBox();
             this.tableLayoutPanel1 = new System.Windows.Forms.TableLayoutPanel();
@@ -57,7 +58,7 @@
             this.tableLayoutPanel.Padding = new System.Windows.Forms.Padding(16, 16, 16, 0);
             this.tableLayoutPanel.RowCount = 1;
             this.tableLayoutPanel.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 100F));
-            this.tableLayoutPanel.Size = new System.Drawing.Size(581, 116);
+            this.tableLayoutPanel.Size = new System.Drawing.Size(481, 90);
             this.tableLayoutPanel.TabIndex = 7;
             // 
             // resultPictureBox
@@ -68,14 +69,13 @@
             this.resultPictureBox.Location = new System.Drawing.Point(16, 16);
             this.resultPictureBox.Margin = new System.Windows.Forms.Padding(0);
             this.resultPictureBox.Name = "resultPictureBox";
-            this.resultPictureBox.Size = new System.Drawing.Size(48, 100);
+            this.resultPictureBox.Size = new System.Drawing.Size(48, 74);
             this.resultPictureBox.SizeMode = System.Windows.Forms.PictureBoxSizeMode.AutoSize;
             this.resultPictureBox.TabIndex = 4;
             this.resultPictureBox.TabStop = false;
             // 
             // tableLayoutPanel1
             // 
-            this.tableLayoutPanel1.AutoSize = true;
             this.tableLayoutPanel1.ColumnCount = 1;
             this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle());
             this.tableLayoutPanel1.Controls.Add(this.progressBar, 0, 2);
@@ -89,7 +89,7 @@
             this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle());
             this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle());
             this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle());
-            this.tableLayoutPanel1.Size = new System.Drawing.Size(495, 94);
+            this.tableLayoutPanel1.Size = new System.Drawing.Size(395, 68);
             this.tableLayoutPanel1.TabIndex = 5;
             // 
             // progressBar
@@ -98,7 +98,7 @@
             this.progressBar.Location = new System.Drawing.Point(3, 37);
             this.progressBar.MarqueeAnimationSpeed = 10;
             this.progressBar.Name = "progressBar";
-            this.progressBar.Size = new System.Drawing.Size(489, 27);
+            this.progressBar.Size = new System.Drawing.Size(389, 27);
             this.progressBar.Style = System.Windows.Forms.ProgressBarStyle.Marquee;
             this.progressBar.TabIndex = 1;
             // 
@@ -126,15 +126,15 @@
             this.controlPanel.Controls.Add(this.cancelButton);
             this.controlPanel.Dock = System.Windows.Forms.DockStyle.Bottom;
             this.controlPanel.FlowDirection = System.Windows.Forms.FlowDirection.RightToLeft;
-            this.controlPanel.Location = new System.Drawing.Point(0, 116);
+            this.controlPanel.Location = new System.Drawing.Point(0, 90);
             this.controlPanel.Name = "controlPanel";
             this.controlPanel.Padding = new System.Windows.Forms.Padding(0, 8, 16, 8);
-            this.controlPanel.Size = new System.Drawing.Size(581, 55);
+            this.controlPanel.Size = new System.Drawing.Size(481, 55);
             this.controlPanel.TabIndex = 6;
             // 
             // okButton
             // 
-            this.okButton.Location = new System.Drawing.Point(487, 11);
+            this.okButton.Location = new System.Drawing.Point(387, 11);
             this.okButton.Name = "okButton";
             this.okButton.Size = new System.Drawing.Size(75, 32);
             this.okButton.TabIndex = 0;
@@ -144,7 +144,7 @@
             // 
             // cancelButton
             // 
-            this.cancelButton.Location = new System.Drawing.Point(406, 11);
+            this.cancelButton.Location = new System.Drawing.Point(306, 11);
             this.cancelButton.Name = "cancelButton";
             this.cancelButton.Size = new System.Drawing.Size(75, 32);
             this.cancelButton.TabIndex = 0;
@@ -156,16 +156,19 @@
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 16F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(581, 171);
+            this.ClientSize = new System.Drawing.Size(481, 145);
+            this.ControlBox = false;
             this.Controls.Add(this.tableLayoutPanel);
             this.Controls.Add(this.controlPanel);
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedDialog;
+            this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
             this.MaximizeBox = false;
             this.Name = "DownloadForm";
-            this.ShowIcon = false;
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
             this.Text = "Import programs";
+            this.TopMost = true;
             this.FormClosed += new System.Windows.Forms.FormClosedEventHandler(this.DownloadForm_FormClosed);
+            this.Shown += new System.EventHandler(this.DownloadForm_Shown);
             this.tableLayoutPanel.ResumeLayout(false);
             this.tableLayoutPanel.PerformLayout();
             ((System.ComponentModel.ISupportInitialize)(this.resultPictureBox)).EndInit();

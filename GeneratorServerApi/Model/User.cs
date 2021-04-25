@@ -4,9 +4,9 @@ namespace GeneratorApiLibrary.Model
 {
     public class User
     {
-        public string id { get; set; }
-        public string token { get; set; }
-        public List<string> privileges { get; set; }
-        public UserProfile profile { get; set; }
+        public string Id { get; set; }
+        public string Token { get; set; }
+        public List<string> Privileges { get; set; }
+        public UserProfile Profile { get; set; }
     }
 }

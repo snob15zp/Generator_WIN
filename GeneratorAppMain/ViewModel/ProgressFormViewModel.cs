@@ -150,7 +150,7 @@ namespace GeneratorAppMain.ViewModel
             SwitchToInProgressState("Downloading...");
             try
             {
-                await _deviceManager.DownloadPrograms(url, _cancellationTokenSource.Token);
+                await _deviceManager.DownloadPrograms(url);
                 SwitchToSuccessState("Programs import successfully.");
             }
             catch (OperationCanceledException e) when (e.CancellationToken == _cancellationTokenSource.Token)
@@ -170,21 +170,21 @@ namespace GeneratorAppMain.ViewModel
             }
         }
 
-        public async void CheckForUpdates(bool forceUpdate)
+        public async void CheckForUpdates()
         {
             SwitchToInProgressState("Checking for updates...");
             try
             {
-                var versionInfo = await _deviceManager.CheckForUpdates(_cancellationTokenSource.Token);
-                UpdateIsReady = versionInfo.IsUpdateAvailable || forceUpdate;
-                if (forceUpdate)
-                {
-                    _latestVersion = versionInfo.LatestVersion;
-                    var currentVersion = versionInfo.CurrentVersion;
-                    SwitchToFinishState($"Latest stable version {_latestVersion}, current version {currentVersion}",
-                        "Do you want to update your firmware?", null);
-                    return;
-                }
+                var versionInfo = await _deviceManager.CheckForUpdates();
+                UpdateIsReady = versionInfo.IsUpdateAvailable;
+                //if (forceUpdate)
+                //{
+                //    _latestVersion = versionInfo.LatestVersion;
+                //    var currentVersion = versionInfo.CurrentVersion;
+                //    SwitchToFinishState($"Latest stable version {_latestVersion}, current version {currentVersion}",
+                //        "Do you want to update your firmware?", null);
+                //    return;
+                //}
 
                 if (versionInfo.IsUpdateAvailable)
                 {
@@ -213,7 +213,7 @@ namespace GeneratorAppMain.ViewModel
             SwitchToInProgressState("Updating...");
             try
             {
-                await _deviceManager.DownloadFirmware(version, _cancellationTokenSource.Token);
+                await _deviceManager.DownloadFirmware(version);
                 SwitchToSuccessState("Device updated successfully.");
                 DeviceInfoMessage = $"Current version is {_latestVersion}";
             }
@@ -261,7 +261,8 @@ namespace GeneratorAppMain.ViewModel
 
         public void Dispose()
         {
-            _cancellationTokenSource.Cancel(true);
+            _cancellationTokenSource.Cancel();
+            _deviceManager.Cancel();
             _deviceManager.DeviceUpdateStatusEvent -= DeviceManager_DeviceUpdateStatusEvent;
         }
     }

@@ -4,9 +4,10 @@ namespace GeneratorApiLibrary.Model
 {
     public class Folder
     {
-        public string id { get; set; }
-        public string name { get; set; }
-        public long expiresIn { get; set; }
-        public DateTime createdAt { get; set; }
+        public string Id { get; set; }
+        public string Name { get; set; }
+        public long ExpiresIn { get; set; }
+        public DateTime CreatedAt { get; set; }
+        public bool IsEncrypted { get; set; }
     }
 }

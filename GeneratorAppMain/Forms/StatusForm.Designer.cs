@@ -42,7 +42,7 @@ namespace GeneratorAppMain.Forms
             // 
             // okButton
             // 
-            this.okButton.Location = new System.Drawing.Point(459, 94);
+            this.okButton.Location = new System.Drawing.Point(459, 98);
             this.okButton.Name = "okButton";
             this.okButton.Size = new System.Drawing.Size(75, 28);
             this.okButton.TabIndex = 0;
@@ -70,7 +70,7 @@ namespace GeneratorAppMain.Forms
             // 
             // installButton
             // 
-            this.installButton.Location = new System.Drawing.Point(16, 94);
+            this.installButton.Location = new System.Drawing.Point(97, 98);
             this.installButton.Name = "installButton";
             this.installButton.Size = new System.Drawing.Size(75, 28);
             this.installButton.TabIndex = 6;
@@ -80,7 +80,7 @@ namespace GeneratorAppMain.Forms
             // 
             // refreshButton
             // 
-            this.refreshButton.Location = new System.Drawing.Point(97, 94);
+            this.refreshButton.Location = new System.Drawing.Point(16, 98);
             this.refreshButton.Name = "refreshButton";
             this.refreshButton.Size = new System.Drawing.Size(75, 28);
             this.refreshButton.TabIndex = 7;
@@ -94,7 +94,7 @@ namespace GeneratorAppMain.Forms
             this.infoPanel.Controls.Add(this.latestFirmwareVersionLabel);
             this.infoPanel.Location = new System.Drawing.Point(16, 14);
             this.infoPanel.Name = "infoPanel";
-            this.infoPanel.Size = new System.Drawing.Size(518, 64);
+            this.infoPanel.Size = new System.Drawing.Size(518, 56);
             this.infoPanel.TabIndex = 8;
             // 
             // progressBar
@@ -111,7 +111,7 @@ namespace GeneratorAppMain.Forms
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 16F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(551, 137);
+            this.ClientSize = new System.Drawing.Size(551, 142);
             this.Controls.Add(this.progressBar);
             this.Controls.Add(this.infoPanel);
             this.Controls.Add(this.refreshButton);

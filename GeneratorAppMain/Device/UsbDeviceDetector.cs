@@ -49,7 +49,7 @@ namespace GeneratorAppMain.Device
             {
                 try
                 {
-                    await _deviceManager.AwaitDeviceConnection(10000, _cancellationTokenSource.Token);
+                    await _deviceManager.AwaitDeviceConnection(10000);
                     Debug.WriteLine("Device connected");
                     DeviceStatusEvent?.Invoke(this, DeviceStatus.Connected);
                 }

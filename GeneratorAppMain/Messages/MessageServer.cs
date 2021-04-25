@@ -76,7 +76,7 @@ namespace GeneratorAppMain.Messages
                 var message = readMessage(_namedPipeServer);
                 Debug.WriteLine("Message received: " + message);
 
-                _messageHandler.Handle(message);
+                _ = Task.Run(() => _messageHandler.Handle(message));
                 _namedPipeServer.Disconnect();
             }
 

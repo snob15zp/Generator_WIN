@@ -1,4 +1,5 @@
-﻿using GeneratorServerApi;
+﻿using GeneratorApiLibrary.Model;
+using GeneratorServerApi;
 using GeneratorServerApi.Model;
 using RestSharp;
 using RestSharp.Serialization.Json;
@@ -14,6 +15,7 @@ namespace GeneratorApiLibrary
         Task<Firmware> GetLatestVersion();
         Task DonwloadFirmware(string version, string path, CancellationToken cancellationToken);
         Task DownloadPrograms(string url, string path, CancellationToken cancellationToken);
+        Task<Folder> GetFolder(string folderId, string token);
     }
 
     public class GeneratorApi : IGeneratorApi
@@ -28,6 +30,12 @@ namespace GeneratorApiLibrary
             client.UseSerializer(
                 () => new JsonSerializer()
             );
+        }
+
+        public Task<Folder> GetFolder(string folderId, string token)
+        {
+            var requset = new RestRequest($"/api/folders/{folderId}/h/{token}");
+            return Execute<Folder>(requset);
         }
 
         public Task DonwloadFirmware(string version, string path, CancellationToken cancellationToken)
@@ -77,7 +85,7 @@ namespace GeneratorApiLibrary
             {
                 Logger.Error($"Api error: {response.StatusCode}, {response.ErrorMessage}, {response.Content}", response.ErrorException);
                 var error = new JsonDeserializer().Deserialize<ResponseError>(response);
-                throw new ApiException(error.errors.status, error.errors.message);
+                throw new ApiException(error.Errors.Status, error.Errors.Message);
             }
         }
 
