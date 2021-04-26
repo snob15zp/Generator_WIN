@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.IO.Compression;
@@ -29,6 +30,7 @@ namespace GeneratorAppMain.Device
         Task DownloadFirmware(string version);
         Task DownloadPrograms(string url);
         void Cancel();
+        void Close();
     }
 
     public class DeviceVersionInfo
@@ -87,6 +89,8 @@ namespace GeneratorAppMain.Device
 
         private IDeviceConnection _device;
 
+        private CancellationTokenSource cancellationTokenSource;
+
         public DeviceManager(IDeviceConnectionFactory deviceFactory, IGeneratorApi api)
         {
             _deviceConnectionFactory = deviceFactory;
@@ -124,14 +128,16 @@ namespace GeneratorAppMain.Device
 
         public async Task DownloadFirmware(string version)
         {
+            cancellationTokenSource = new CancellationTokenSource();
+
             DeviceUpdateStatusEvent?.Invoke(this, DeviceUpdateStatusEventArgs.Downloading());
             var tempFileName = Path.GetTempFileName();
             try
             {
-                await _api.DonwloadFirmware(version, tempFileName, CancellationToken.None);
+                await _api.DonwloadFirmware(version, tempFileName, cancellationTokenSource.Token);
 
                 var tempPath = Path.GetTempPath() + Path.GetRandomFileName();
-                await Task.Run(() => ZipFile.ExtractToDirectory(tempFileName, tempPath));
+                await Task.Run(() => ZipFile.ExtractToDirectory(tempFileName, tempPath), cancellationTokenSource.Token);
                 await UpdateFirmware(tempPath);
             }
             catch (ApiException e)
@@ -144,12 +150,19 @@ namespace GeneratorAppMain.Device
                 Logger.Error("Unable to update device", e);
                 throw new DeviceException("Unable to extract data");
             }
+            finally
+            {
+                cancellationTokenSource.Dispose();
+                cancellationTokenSource = null;
+            }
         }
 
         public async Task DownloadPrograms(string url)
         {
+            cancellationTokenSource = new CancellationTokenSource();
+
             var parts = url.TrimStart('/').Split('/');
-            if(parts.Length < 4)
+            if (parts.Length < 4)
             {
                 throw new DeviceException("Malformed download url");
             }
@@ -157,8 +170,8 @@ namespace GeneratorAppMain.Device
             var tempFileName = Path.GetTempFileName();
             try
             {
-                var folder = await _api.GetFolder(parts[1], parts[3]);
-                await _api.DownloadPrograms(url, tempFileName, CancellationToken.None);
+                var folder = await _api.GetFolder(parts[1], parts[3], cancellationTokenSource.Token);
+                await _api.DownloadPrograms(url, tempFileName, cancellationTokenSource.Token);
                 await Task.Run(() =>
                 {
                     var tempPath = Path.GetTempPath() + Path.GetRandomFileName();
@@ -166,7 +179,7 @@ namespace GeneratorAppMain.Device
 
                     var files = Directory.GetFiles(tempPath).Where(fname => fname.EndsWith(".txt")).ToArray();
                     ImportFiles(files, false, folder.IsEncrypted);
-                });
+                }, cancellationTokenSource.Token);
             }
             catch (OperationCanceledException e)
             {
@@ -181,6 +194,11 @@ namespace GeneratorAppMain.Device
             {
                 Logger.Error("Unable to import programs", e);
                 throw new DeviceException("Unable to import programs");
+            }
+            finally
+            {
+                cancellationTokenSource.Dispose();
+                cancellationTokenSource = null;
             }
         }
 
@@ -199,6 +217,22 @@ namespace GeneratorAppMain.Device
         }
 
         public void Cancel()
+        {
+            cancellationTokenSource?.Cancel();
+            if (_device != null && _device.Ready)
+            {
+                try
+                {
+                    _device.PutFileCancel();
+                }
+                catch (Exception)
+                {
+                    // Ignore
+                }
+            }
+        }
+
+        public void Close()
         {
             if (_device != null && _device.Ready)
             {
@@ -240,6 +274,11 @@ namespace GeneratorAppMain.Device
         {
             using (_device = _deviceConnectionFactory.Connect())
             {
+                if (cancellationTokenSource.IsCancellationRequested)
+                {
+                    throw new DeviceCanceledException();
+                }
+
                 _device.EraseByExt("txt");
                 _device.EraseByExt("pls");
 
@@ -260,25 +299,14 @@ namespace GeneratorAppMain.Device
                 var idx = 1;
                 foreach (var file in files)
                 {
-                    var result = _device.PutFile($"{idx}.txt", File.ReadAllBytes(file), false, isEncrypted);
-                    if (result != ErrorCodes.NoError)
-                    {
-                        Logger.Error($"Put file {file} error: {result}");
-                        throw new DeviceUpdateException(result);
-                    }
+                    PutFile($"{idx}.txt", File.ReadAllBytes(file), false, isEncrypted);
                     idx++;
                     _totalBytesSend += FileLength(file);
                 }
 
                 if (programFiles.Count() > 0)
                 {
-                    var result = _device.PutFile("freq.pls", fileList, false, false);
-
-                    if (result != ErrorCodes.NoError)
-                    {
-                        Logger.Error($"Put file freq.pls error: {result}");
-                        throw new DeviceUpdateException(result);
-                    }
+                    PutFile("freq.pls", fileList, false, false);
                 }
 
                 _device.TransmitDone();
@@ -287,6 +315,24 @@ namespace GeneratorAppMain.Device
                 if (isRebootNeeded)
                 {
                     DeviceUpdateStatusEvent?.Invoke(this, DeviceUpdateStatusEventArgs.Rebooting());
+                }
+            }
+        }
+
+        private void PutFile(string name, IEnumerable<byte> content, bool encrypted, bool alreadyEncrypted)
+        {
+            var result = _device.PutFile(name, content, encrypted, alreadyEncrypted);
+
+            if (result != ErrorCodes.NoError)
+            {
+                if (result == ErrorCodes.Canceled)
+                {
+                    throw new DeviceCanceledException();
+                }
+                else
+                {
+                    Logger.Error($"Put file {name} error: {result}");
+                    throw new DeviceUpdateException(result);
                 }
             }
         }

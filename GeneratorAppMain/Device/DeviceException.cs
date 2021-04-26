@@ -18,6 +18,13 @@ namespace GeneratorAppMain.Device
         }
     }
 
+    internal class DeviceCanceledException : DeviceException
+    {
+        public DeviceCanceledException() : base("The file transfer process was interrupted.")
+        {
+        }
+    }
+
     internal class DeviceUpdateException : DeviceException
     {
         public DeviceUpdateException() : base("Unable to update device")

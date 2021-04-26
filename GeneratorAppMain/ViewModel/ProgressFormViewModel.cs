@@ -16,8 +16,9 @@ namespace GeneratorAppMain.ViewModel
         private readonly IDeviceManager _deviceManager = UnityConfiguration.Resolve<IDeviceManager>();
         private readonly ISynchronizeInvoke _syncObject;
 
-        private string _deviceInfoMessage;
+        private bool _canceled;
 
+        private string _deviceInfoMessage;
 
         private string _deviceStatusMessage;
 
@@ -32,6 +33,8 @@ namespace GeneratorAppMain.ViewModel
         private string _latestVersion;
 
         private bool _updateIsReady;
+
+        private bool _putFileInProgress;
 
         public string Version { get { return _latestVersion; } }
 
@@ -81,6 +84,16 @@ namespace GeneratorAppMain.ViewModel
             }
         }
 
+        public bool PutFileInProgress
+        {
+            get => _putFileInProgress;
+            private set
+            {
+                _putFileInProgress = value;
+                NotifyPropertyChanged("PutFileInProgress");
+            }
+        }
+
         public bool HasError
         {
             get => _hasError;
@@ -121,6 +134,9 @@ namespace GeneratorAppMain.ViewModel
                     DeviceStatusMessage = "Downloading...";
                     break;
                 case DeviceUpdateStatus.Updating:
+                    PutFileInProgress = args.Progress >= 0;
+                    if (_canceled) return;
+
                     DeviceStatusMessage = args.Progress >= 0
                         ? $"Device update in progress ({args.Progress}%)"
                         : "Device update in progress...";
@@ -140,20 +156,21 @@ namespace GeneratorAppMain.ViewModel
             var handler = PropertyChanged;
             var eventArgs = new PropertyChangedEventArgs(propertyName);
             if (_syncObject.InvokeRequired)
-                _syncObject.BeginInvoke(handler, new object[] {this, eventArgs});
+                _syncObject.BeginInvoke(handler, new object[] { this, eventArgs });
             else
                 handler.Invoke(this, eventArgs);
         }
 
         public async void DownloadPrograms(string url)
         {
+            _canceled = false;
             SwitchToInProgressState("Downloading...");
             try
             {
                 await _deviceManager.DownloadPrograms(url);
                 SwitchToSuccessState("Programs import successfully.");
             }
-            catch (OperationCanceledException e) when (e.CancellationToken == _cancellationTokenSource.Token)
+            catch (OperationCanceledException e)
             {
                 Logger.Info("Download was canceled.");
                 SwitchToErrorState("Operation was canceled.");
@@ -167,6 +184,10 @@ namespace GeneratorAppMain.ViewModel
             {
                 Logger.Error("Unable to download programs", e);
                 SwitchToErrorState("Something wrong happened.");
+            }
+            finally
+            {
+                _canceled = false;
             }
         }
 
@@ -227,6 +248,13 @@ namespace GeneratorAppMain.ViewModel
             }
         }
 
+        public void Cancel()
+        {
+            _canceled = true;
+            SwitchToInProgressState("Canceling...");
+            _deviceManager.Cancel();
+        }
+
         private void SwitchToInProgressState(string status)
         {
             InProgress = true;
@@ -262,7 +290,7 @@ namespace GeneratorAppMain.ViewModel
         public void Dispose()
         {
             _cancellationTokenSource.Cancel();
-            _deviceManager.Cancel();
+            _deviceManager.Close();
             _deviceManager.DeviceUpdateStatusEvent -= DeviceManager_DeviceUpdateStatusEvent;
         }
     }

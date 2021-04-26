@@ -15,7 +15,7 @@ namespace GeneratorApiLibrary
         Task<Firmware> GetLatestVersion();
         Task DonwloadFirmware(string version, string path, CancellationToken cancellationToken);
         Task DownloadPrograms(string url, string path, CancellationToken cancellationToken);
-        Task<Folder> GetFolder(string folderId, string token);
+        Task<Folder> GetFolder(string folderId, string token, CancellationToken cancellationToken);
     }
 
     public class GeneratorApi : IGeneratorApi
@@ -32,10 +32,10 @@ namespace GeneratorApiLibrary
             );
         }
 
-        public Task<Folder> GetFolder(string folderId, string token)
+        public Task<Folder> GetFolder(string folderId, string token, CancellationToken cancellationToken)
         {
             var requset = new RestRequest($"/api/folders/{folderId}/h/{token}");
-            return Execute<Folder>(requset);
+            return Execute<Folder>(requset, cancellationToken);
         }
 
         public Task DonwloadFirmware(string version, string path, CancellationToken cancellationToken)

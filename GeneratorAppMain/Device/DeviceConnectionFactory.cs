@@ -13,7 +13,6 @@ namespace GeneratorAppMain.Device
         {
             var deviceConnection =  new DeviceConnection();
             return deviceConnection;
-            //return new FakeDeviceConnection();
         }
     }
 }
