@@ -14,8 +14,8 @@ namespace GeneratorAppManager
     {
         private static readonly log4net.ILog Logger = log4net.LogManager.GetLogger(typeof(Program));
 
-        private static readonly string Prefix = "generator://inhealion.gr/generator";
-        private static readonly string MainProgramName = "generator";
+        private static readonly string Prefix = Prefix = "generator://inhealion.gr/generator";
+        private static readonly string MainProgramName = "inhealion";
 
         private static readonly int RunPocessWaitingTimeoutMs = 1000;
         private static readonly int ConnectToPocessWaitingTimeoutMs = 1000;

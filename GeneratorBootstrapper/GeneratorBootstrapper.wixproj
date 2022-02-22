@@ -6,7 +6,7 @@
     <ProductVersion>3.10</ProductVersion>
     <ProjectGuid>4c3e55c3-cef1-4c48-bcd3-057673030c3c</ProjectGuid>
     <SchemaVersion>2.0</SchemaVersion>
-    <OutputName>generator-setup</OutputName>
+    <OutputName>inhealion-setup</OutputName>
     <OutputType>Bundle</OutputType>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|x86' ">
@@ -33,6 +33,7 @@
   </ItemGroup>
   <ItemGroup>
     <Content Include="CDM21228_Setup.exe" />
+    <Content Include="Icon.png" />
     <Content Include="setup_64x64.png" />
     <Content Include="HyperlinkTheme.xml" />
   </ItemGroup>

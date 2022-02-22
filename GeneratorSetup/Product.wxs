@@ -82,13 +82,13 @@
     <Directory Id="TARGETDIR" Name="SourceDir">
       <Directory Id="DesktopFolder" SourceName="Desktop" />
       <Directory Id="ProgramFilesFolder">
-        <Directory Id="INSTALLFOLDER" Name="Generator"/>
+        <Directory Id="INSTALLFOLDER" Name="InHealion"/>
       </Directory>
     </Directory>
 
     <DirectoryRef Id="INSTALLFOLDER">
       <Component Id="CleanupMainApplicationFolder" Guid="*">
-        <RegistryValue Root="HKLM" Key="SOFTWARE\Inhealion\Generator" Name="Path" Type="string" Value="[INSTALLFOLDER]" KeyPath="yes" />
+        <RegistryValue Root="HKLM" Key="SOFTWARE\Inhealion" Name="Path" Type="string" Value="[INSTALLFOLDER]" KeyPath="yes" />
         <util:RemoveFolderEx On="uninstall" Property="INSTALLFOLDER" />
       </Component>
     </DirectoryRef>
@@ -116,7 +116,7 @@
                      Key="generator"
                      Action="createAndRemoveOnUninstall">
           <RegistryKey Key="shell\open\command">
-            <RegistryValue Type="string" Value="[INSTALLFOLDER]generator-manager.exe %1"/>
+            <RegistryValue Type="string" Value="[INSTALLFOLDER]inhealion-manager.exe %1"/>
           </RegistryKey>
 
           <RegistryValue Type="string" Value="URL: Generator Protocol"/>
@@ -125,7 +125,7 @@
       </Component>
 
       <Component Id="LibsComponent" Guid="F127CED8-4E19-499E-8150-B69ACF03B527">
-        <File Source="$(var.GeneratorAppMain.TargetDir)generator.exe.config" />
+        <File Source="$(var.GeneratorAppMain.TargetDir)inhealion.exe.config" />
         <File Source="$(var.GeneratorAppMain.TargetDir)ftd2xx.dll" />
         <File Source="$(var.GeneratorAppMain.TargetDir)FTD2XX_NET.dll" />
         <File Source="$(var.GeneratorAppMain.TargetDir)NModbus.dll" />
@@ -143,7 +143,7 @@
         <File Source="$(var.GeneratorAppMain.TargetDir)System.Runtime.dll" />
         <File Source="$(var.GeneratorAppMain.TargetDir)System.Diagnostics.Process.dll" />
 
-        <File Source="$(var.GeneratorAppManager.TargetDir)generator-manager.exe.config" />
+        <File Source="$(var.GeneratorAppManager.TargetDir)inhealion-manager.exe.config" />
       </Component>
     </ComponentGroup>
   </Fragment>

@@ -133,13 +133,13 @@ namespace GeneratorAppMain.ViewModel
                 case DeviceUpdateStatus.Downloading:
                     DeviceStatusMessage = "Downloading...";
                     break;
-                case DeviceUpdateStatus.Updating:
-                    PutFileInProgress = args.Progress >= 0;
-                    if (_canceled) return;
-
-                    DeviceStatusMessage = args.Progress >= 0
-                        ? $"Device update in progress ({args.Progress}%)"
-                        : "Device update in progress...";
+                case DeviceUpdateStatus.ImportBatteryCalibration: UpdateImportStatusMessage("Import battery calibration", args.Progress); break;
+                case DeviceUpdateStatus.ImportFpga: UpdateImportStatusMessage("Import FPGA file", args.Progress); break;
+                case DeviceUpdateStatus.ImportFrequancy: UpdateImportStatusMessage("Import programs", args.Progress); break;
+                case DeviceUpdateStatus.ImportUsbCharger: UpdateImportStatusMessage("Import usb charger", args.Progress); break;
+                case DeviceUpdateStatus.ImportMcu: UpdateImportStatusMessage("Import MCU firmware", args.Progress); break;
+                case DeviceUpdateStatus.FormatFs:
+                    DeviceStatusMessage = "Formating flash...";
                     break;
                 case DeviceUpdateStatus.Rebooting:
                     DeviceStatusMessage = "Wait for device rebooting...";
@@ -147,6 +147,14 @@ namespace GeneratorAppMain.ViewModel
                 case DeviceUpdateStatus.Ready:
                     break;
             }
+        }
+
+        private void UpdateImportStatusMessage(string message, int progress)
+        {
+            PutFileInProgress = progress >= 0;
+            if (_canceled) return;
+
+            DeviceStatusMessage = progress >= 0 ? $"{message} ({progress}%)" : $"{message}...";
         }
 
         private void NotifyPropertyChanged(string propertyName)

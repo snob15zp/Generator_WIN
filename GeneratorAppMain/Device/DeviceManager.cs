@@ -51,9 +51,31 @@ namespace GeneratorAppMain.Device
         public DeviceUpdateStatus Status { get; }
         public int Progress { get; }
 
-        public static DeviceUpdateStatusEventArgs Updating(long current = -1, long total = 1)
+        public static DeviceUpdateStatusEventArgs Updating(FileType fileType, long current = -1, long total = 1)
         {
-            return new DeviceUpdateStatusEventArgs(DeviceUpdateStatus.Updating, (int)(current * 100.0 / total));
+            DeviceUpdateStatus status;
+            switch (fileType)
+            {
+                case FileType.MCU:
+                    status = DeviceUpdateStatus.ImportMcu;
+                    break;
+                case FileType.FREQUENCY:
+                    status = DeviceUpdateStatus.ImportFrequancy;
+                    break;
+                case FileType.BATTERY_CALIBRATION:
+                    status = DeviceUpdateStatus.ImportBatteryCalibration;
+                    break;
+                case FileType.FPGA:
+                    status = DeviceUpdateStatus.ImportFpga;
+                    break;
+                case FileType.USB_CHARGER:
+                    status = DeviceUpdateStatus.ImportUsbCharger;
+                    break;
+                default:
+                    throw new DeviceException("Unknown file type");
+            }
+
+            return new DeviceUpdateStatusEventArgs(status, (int)(current * 100.0 / total));
         }
 
         public static DeviceUpdateStatusEventArgs Downloading()
@@ -65,14 +87,33 @@ namespace GeneratorAppMain.Device
         {
             return new DeviceUpdateStatusEventArgs(DeviceUpdateStatus.Rebooting);
         }
+
+        public static DeviceUpdateStatusEventArgs FormatFs()
+        {
+            return new DeviceUpdateStatusEventArgs(DeviceUpdateStatus.FormatFs);
+        }
+    }
+
+    public enum FileType
+    {
+        MCU,
+        FPGA,
+        BATTERY_CALIBRATION,
+        USB_CHARGER,
+        FREQUENCY
     }
 
     public enum DeviceUpdateStatus
     {
         Downloading,
-        Updating,
+        ImportMcu,
+        ImportFpga,
+        ImportBatteryCalibration,
+        ImportUsbCharger,
+        ImportFrequancy,
         Rebooting,
-        Ready
+        Ready,
+        FormatFs
     }
 
     internal class DeviceManager : IDeviceManager
@@ -86,6 +127,7 @@ namespace GeneratorAppMain.Device
         private long _totalBytes;
 
         private long _totalBytesSend;
+        private FileType _currentFileType;
 
         private IDeviceConnection _device;
 
@@ -138,7 +180,7 @@ namespace GeneratorAppMain.Device
 
                 var tempPath = Path.GetTempPath() + Path.GetRandomFileName();
                 await Task.Run(() => ZipFile.ExtractToDirectory(tempFileName, tempPath), cancellationTokenSource.Token);
-                await UpdateFirmware(tempPath);
+                await UpdateFirmware(tempPath, version);
             }
             catch (ApiException e)
             {
@@ -178,7 +220,7 @@ namespace GeneratorAppMain.Device
                     ZipFile.ExtractToDirectory(tempFileName, tempPath);
 
                     var files = Directory.GetFiles(tempPath).Where(fname => fname.EndsWith(".txt")).ToArray();
-                    ImportFiles(files, false, folder.IsEncrypted);
+                    ImportFiles(files, true);
                 }, cancellationTokenSource.Token);
             }
             catch (OperationCanceledException e)
@@ -247,30 +289,52 @@ namespace GeneratorAppMain.Device
             }
         }
 
-        private async Task UpdateFirmware(string path)
+        private async Task UpdateFirmware(string path, string version)
         {
             await Task.Run(async () =>
             {
-                DeviceUpdateStatusEvent?.Invoke(this, DeviceUpdateStatusEventArgs.Updating());
-
                 var files = Directory.GetFiles(path);
                 var cpuFile = files.FirstOrDefault(fname => fname.EndsWith(".bf"));
                 if (cpuFile != null)
                 {
-                    ImportCpuFile(cpuFile);
+                    FormatFlash();
+                    await Task.Delay(120000);
+                    await AwaitDeviceConnection(BootloaderTimeout);
+
+                    DeviceUpdateStatusEvent?.Invoke(this, DeviceUpdateStatusEventArgs.Updating(FileType.MCU));
+                    ImportCpuFile(cpuFile, version);
                     await AwaitDeviceConnection(BootloaderTimeout);
                 }
 
                 var otherFwFiles = files.Where(fname => !fname.EndsWith(".bf")).ToArray();
                 if (otherFwFiles.Length > 0)
                 {
-                    ImportFiles(otherFwFiles, true);
+                    ImportFiles(otherFwFiles);
                     await AwaitDeviceConnection(BootloaderTimeout);
                 }
             });
         }
 
-        private void ImportFiles(string[] files, bool isRebootNeeded, bool isEncrypted = false)
+        private void FormatFlash()
+        {
+            using (_device = _deviceConnectionFactory.Connect())
+            {
+                DeviceUpdateStatusEvent?.Invoke(this, DeviceUpdateStatusEventArgs.FormatFs());
+                _device.FormatFS();
+            }
+        }
+
+        private void UpdateVersion(string version)
+        {
+            using (_device = _deviceConnectionFactory.Connect())
+            {
+                Version ver;
+                Version.TryParse(version, out ver);
+                _device.BootloaderSetVersion(ver);
+            }
+        }
+
+        private void ImportFiles(string[] files, bool isEncrypted = false)
         {
             using (_device = _deviceConnectionFactory.Connect())
             {
@@ -292,14 +356,47 @@ namespace GeneratorAppMain.Device
 
                 _totalBytes = files.Sum(FileLength) + fileList.Length;
                 if (_totalBytes == 0) return;
-                DeviceUpdateStatusEvent?.Invoke(this, DeviceUpdateStatusEventArgs.Updating());
+
+                if (fileList.Length > 0)
+                {
+                    DeviceUpdateStatusEvent?.Invoke(this, DeviceUpdateStatusEventArgs.Updating(FileType.FREQUENCY));
+                }
 
                 _device.OnPutFilePart += Device_OnPutFilePart;
                 _totalBytesSend = 0;
                 var idx = 1;
+                var fileName = "";
                 foreach (var file in files)
                 {
-                    PutFile($"{idx}.txt", File.ReadAllBytes(file), false, isEncrypted);
+                    var extension = Path.GetExtension(file);
+                    switch (extension)
+                    {
+                        case ".rbf":
+                            fileName = "FPGA";
+                            _currentFileType = FileType.FPGA;
+                            break;
+                        case ".srec":
+                            fileName = "bq28z610";
+                            _currentFileType = FileType.BATTERY_CALIBRATION;
+                            break;
+                        case ".bin":
+                            fileName = "tps65987";
+                            _currentFileType = FileType.USB_CHARGER;
+                            break;
+                        case ".txt":
+                            fileName = $"{idx}";
+                            _currentFileType = FileType.FREQUENCY;
+                            break;
+                        default:
+                            Logger.Error($"Unknown file type: {file}. Skip file");
+                            continue;
+                    }
+
+                    if (_currentFileType != FileType.FREQUENCY)
+                    {
+                        DeviceUpdateStatusEvent?.Invoke(this, DeviceUpdateStatusEventArgs.Updating(_currentFileType));
+                    }
+                    PutFile($"{fileName}{extension}", File.ReadAllBytes(file), false, isEncrypted);
                     idx++;
                     _totalBytesSend += FileLength(file);
                 }
@@ -311,11 +408,6 @@ namespace GeneratorAppMain.Device
 
                 _device.TransmitDone();
                 _device.OnPutFilePart -= Device_OnPutFilePart;
-
-                if (isRebootNeeded)
-                {
-                    DeviceUpdateStatusEvent?.Invoke(this, DeviceUpdateStatusEventArgs.Rebooting());
-                }
             }
         }
 
@@ -349,11 +441,10 @@ namespace GeneratorAppMain.Device
             }
         }
 
-        private void ImportCpuFile(string file)
+        private void ImportCpuFile(string file, string version)
         {
             using (_device = _deviceConnectionFactory.Connect())
             {
-
                 _device.BootloaderReset();
                 var doc = new XmlDocument();
                 doc.Load(file);
@@ -367,24 +458,11 @@ namespace GeneratorAppMain.Device
                 {
                     if (!_device.BootloaderUploadMcuFwChunk(Convert.FromBase64String(chunk.InnerText)))
                         throw new DeviceUpdateException();
-                    DeviceUpdateStatusEvent?.Invoke(this, DeviceUpdateStatusEventArgs.Updating(current++, total));
+                    DeviceUpdateStatusEvent?.Invoke(this, DeviceUpdateStatusEventArgs.Updating(FileType.MCU, current++, total));
                 }
-
-                string VerStr = doc.DocumentElement.SelectSingleNode("fw").SelectSingleNode("version").InnerText;
-
-                Version ver = new Version(DateTime.Now.Year - 2000, DateTime.Now.Month, DateTime.Now.Day);
-
-                if (VerStr[0] != 'R')
-                {
-                    Version.TryParse(VerStr, out ver);
-                }
-                else
-                {
-                    if (int.TryParse(VerStr.Substring(1, 2), out int Major) && int.TryParse(VerStr.Substring(3, 2), out int Minor) && int.TryParse(VerStr.Substring(5, 2), out int Build))
-                    {
-                        ver = new Version(Major, Minor, Build);
-                    }
-                }
+                
+                Version ver;
+                Version.TryParse(version, out ver);
                 _device.BootloaderSetVersion(ver);
 
                 DeviceUpdateStatusEvent?.Invoke(this, DeviceUpdateStatusEventArgs.Rebooting());
@@ -394,8 +472,14 @@ namespace GeneratorAppMain.Device
 
         private void Device_OnPutFilePart(object sender, Tuple<string, int, int> args)
         {
-            DeviceUpdateStatusEvent?.Invoke(this,
-                DeviceUpdateStatusEventArgs.Updating(_totalBytesSend + args.Item3, _totalBytes));
+            if (_currentFileType == FileType.FREQUENCY)
+            {
+                DeviceUpdateStatusEvent?.Invoke(this, DeviceUpdateStatusEventArgs.Updating(_currentFileType, _totalBytesSend + args.Item3, _totalBytes));
+            }
+            else
+            {
+                DeviceUpdateStatusEvent?.Invoke(this, DeviceUpdateStatusEventArgs.Updating(_currentFileType, args.Item3, args.Item2));
+            }
         }
 
         public Task AwaitDeviceConnection(int timeout)

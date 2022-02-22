@@ -15,7 +15,7 @@
       <bal:WixStandardBootstrapperApplication
         LicenseUrl=""
         ThemeFile="HyperlinkTheme.xml"
-        LogoFile="setup_64x64.png"
+        LogoFile="Icon.png"
         LocalizationFile="HyperlinkTheme.wxl" />
     </BootstrapperApplicationRef>
 

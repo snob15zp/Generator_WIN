@@ -3,7 +3,7 @@
   <Profiles />
   <Settings>
     <Setting Name="baseApiUrl" Type="System.String" Scope="User">
-      <Value Profile="(Default)">http://inhealion.gr</Value>
+      <Value Profile="(Default)">http://inhealion.gr/device</Value>
     </Setting>
     <Setting Name="siteUrl" Type="System.String" Scope="User">
       <Value Profile="(Default)">http://inhealion.gr</Value>
