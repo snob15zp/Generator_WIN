@@ -261,6 +261,7 @@ namespace GeneratorAppMain.ViewModel
             _canceled = true;
             SwitchToInProgressState("Canceling...");
             _deviceManager.Cancel();
+            SwitchToErrorState("Operation canceled");
         }
 
         private void SwitchToInProgressState(string status)
